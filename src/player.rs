@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::CursorGrabMode};
+use bevy::{prelude::*, render::camera::ScalingMode, window::CursorGrabMode};
 use bevy_enhanced_input::prelude::*;
 
 pub struct PlayerPlugin;
@@ -11,7 +11,8 @@ impl Plugin for PlayerPlugin {
             .add_observer(apply_movement)
             .add_observer(capture_cursor)
             .add_observer(release_cursor)
-            .add_systems(Startup, setup);
+            .add_systems(Startup, setup)
+            .add_systems(Update, draw_debug);
     }
 }
 
@@ -23,27 +24,39 @@ pub struct Speed(pub f32);
 
 fn setup(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
     mut window: Single<&mut Window>,
+    mut ambient_light: ResMut<AmbientLight>,
 ) {
     window.cursor_options.grab_mode = CursorGrabMode::Confined;
     window.cursor_options.visible = false;
 
-    commands.spawn(Camera2d);
+    ambient_light.brightness = 1000.0;
+
+    commands.spawn((
+        Camera3d::default(),
+        Projection::from(OrthographicProjection {
+            scaling_mode: ScalingMode::FixedVertical {
+                viewport_height: 400.,
+            },
+            ..OrthographicProjection::default_3d()
+        }),
+        Transform::from_xyz(0., 0., 100.).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
 
     commands.spawn((
         Player,
-        Speed(600.),
+        Speed(200.),
         Actions::<Playing>::default(),
-        Mesh2d(meshes.add(Triangle2d::new(
-            vec2(0., 12.),
-            vec2(-12., -12.),
-            vec2(12., -12.),
-        ))),
-        MeshMaterial2d(materials.add(Color::srgb(100., 100., 255.))),
+        SceneRoot(
+            asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
+        ),
         Transform::default(),
     ));
+}
+
+fn draw_debug(mut gizmos: Gizmos) {
+    gizmos.axes_2d(Transform::default(), 10.)
 }
 
 fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<Playing>>) {
@@ -57,10 +70,7 @@ fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<P
             Axial::left_stick(),
             Cardinal::dpad_buttons(),
         ))
-        .with_modifiers((
-            DeadZone::default(),
-            DeltaScale,
-        ));
+        .with_modifiers((DeadZone::default(), DeltaScale));
 
     actions.bind::<CaptureCursor>().to(MouseButton::Left);
     actions.bind::<ReleaseCursor>().to(KeyCode::Escape);
