@@ -8,7 +8,8 @@ impl Plugin for AppWindowPlugin {
         if !app.is_plugin_added::<EnhancedInputPlugin>() {
             app.add_plugins(EnhancedInputPlugin);
         }
-        app.add_input_context::<Always>()
+        app.insert_resource(GrabAndHideCursor(false))
+            .add_input_context::<Always>()
             .add_observer(binding)
             .add_observer(capture_cursor)
             .add_observer(release_cursor)
@@ -16,12 +17,22 @@ impl Plugin for AppWindowPlugin {
     }
 }
 
+// For easy disabling during development
+#[derive(Resource)]
+struct GrabAndHideCursor(bool);
+
 #[derive(InputContext)]
 struct Always;
 
-fn setup(mut commands: Commands, mut window: Single<&mut Window>) {
-    window.cursor_options.grab_mode = CursorGrabMode::Confined;
-    window.cursor_options.visible = false;
+fn setup(
+    mut commands: Commands,
+    mut window: Single<&mut Window>,
+    grab_and_hide_cursor: Res<GrabAndHideCursor>,
+) {
+    if grab_and_hide_cursor.0 {
+        window.cursor_options.grab_mode = CursorGrabMode::Confined;
+        window.cursor_options.visible = false;
+    }
 
     commands.spawn(Actions::<Always>::default());
 }
@@ -41,9 +52,15 @@ fn binding(trigger: Trigger<Binding<Always>>, mut players: Query<&mut Actions<Al
     actions.bind::<ReleaseCursor>().to(KeyCode::Escape);
 }
 
-fn capture_cursor(_trigger: Trigger<Completed<CaptureCursor>>, mut window: Single<&mut Window>) {
-    window.cursor_options.grab_mode = CursorGrabMode::Confined;
-    window.cursor_options.visible = false;
+fn capture_cursor(
+    _trigger: Trigger<Completed<CaptureCursor>>,
+    mut window: Single<&mut Window>,
+    grab_and_hide_cursor: Res<GrabAndHideCursor>,
+) {
+    if grab_and_hide_cursor.0 {
+        window.cursor_options.grab_mode = CursorGrabMode::Confined;
+        window.cursor_options.visible = false;
+    }
 }
 
 fn release_cursor(_trigger: Trigger<Completed<ReleaseCursor>>, mut window: Single<&mut Window>) {
