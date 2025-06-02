@@ -3,6 +3,15 @@ name = "bgj6cra"
 version = "0.1.0"
 edition = "2024"
 
+[dependencies]
+bevy = { version = "0.16.1", features = ["file_watcher", "wayland"] }
+bevy_enhanced_input = "0.12.0"
+bevy_skein = "0.2.1"
+
+[lints.clippy]
+too_many_arguments = "allow"
+type_complexity = "allow"
+
 [profile.dev]
 opt-level = 1
 
@@ -27,9 +36,3 @@ inherits = "release"
 opt-level = "s"
 # Strip all debugging information from the binary to slightly reduce file size.
 strip = "debuginfo"
-
-
-[dependencies]
-bevy = { version = "0.16.1", features = ["file_watcher", "wayland"] }
-bevy_enhanced_input = "0.12.0"
-bevy_skein = "0.2.1"
