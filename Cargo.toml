@@ -31,3 +31,4 @@ strip = "debuginfo"
 
 [dependencies]
 bevy = { version = "0.16.1", features = ["wayland"] }
+bevy_enhanced_input = "0.12.0"

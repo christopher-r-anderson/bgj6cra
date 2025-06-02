@@ -1,4 +1,5 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
+use bgj6cra::player::PlayerPlugin;
 
 fn main() -> AppExit {
     App::new().add_plugins(AppPlugin).run()
@@ -27,5 +28,6 @@ impl Plugin for AppPlugin {
                     ..default()
                 }),
         );
+        app.add_plugins(PlayerPlugin);
     }
 }
