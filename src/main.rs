@@ -1,7 +1,8 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
 use bgj6cra::{
-    debug::DebugPlugin, player::PlayerPlugin, stage::StagePlugin, window::AppWindowPlugin,
+    debug::DebugPlugin, enemy::EnemyPlugin, player::PlayerPlugin, stage::StagePlugin,
+    window::AppWindowPlugin,
 };
 
 fn main() -> AppExit {
@@ -32,6 +33,12 @@ impl Plugin for AppPlugin {
                 }),
         );
         app.add_plugins(SkeinPlugin::default());
-        app.add_plugins((AppWindowPlugin, DebugPlugin, PlayerPlugin, StagePlugin));
+        app.add_plugins((
+            AppWindowPlugin,
+            DebugPlugin,
+            EnemyPlugin,
+            PlayerPlugin,
+            StagePlugin,
+        ));
     }
 }
