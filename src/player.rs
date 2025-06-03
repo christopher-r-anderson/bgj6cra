@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
@@ -12,6 +14,8 @@ impl Plugin for PlayerPlugin {
             .add_input_context::<Playing>()
             .add_observer(binding)
             .add_observer(apply_movement)
+            .add_observer(start_firing)
+            .add_observer(completed_firing)
             .add_observer(on_spawn_player)
             .add_systems(Startup, setup)
             .add_systems(
@@ -22,10 +26,15 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Component, Clone, Default, Debug)]
-pub struct Player;
+pub struct Speed(pub f32);
 
 #[derive(Component, Clone, Default, Debug)]
-pub struct Speed(pub f32);
+pub struct Player;
+
+#[derive(Component, Clone, Debug, Reflect)]
+#[reflect(Component)]
+#[relationship_target(relationship = PlayerWeaponOwnedBy)]
+pub struct PlayerOwnedWeapons(Vec<Entity>);
 
 #[derive(Component, Clone, Default, Debug, Reflect)]
 #[reflect(Component)]
@@ -33,10 +42,46 @@ pub struct PlayerWeapon;
 
 #[derive(Component, Clone, Debug, Reflect)]
 #[reflect(Component)]
-pub struct PlayerWeaponOwner(Entity);
+#[relationship(relationship_target = PlayerOwnedWeapons)]
+pub struct PlayerWeaponOwnedBy(Entity);
 
 #[derive(Component, Clone, Default, Debug, Reflect)]
 pub struct PlayerProjectile;
+
+#[derive(Component, Clone, Default, Debug, Reflect)]
+struct AutoFire {
+    active: bool,
+    just_started: bool,
+    timer: Timer,
+}
+
+impl AutoFire {
+    fn new(gap_secs: f32, active: bool) -> Self {
+        Self {
+            active,
+            just_started: true,
+            timer: Timer::from_seconds(gap_secs, TimerMode::Repeating),
+        }
+    }
+    fn just_triggered(&mut self) -> bool {
+        let just_triggered = self.active && (self.just_started || self.timer.just_finished());
+        self.just_started = false;
+        just_triggered
+    }
+    fn start(&mut self) {
+        self.active = true;
+        self.just_started = true;
+        self.timer.reset();
+    }
+    fn stop(&mut self) {
+        self.active = false;
+    }
+    fn tick(&mut self, delta: Duration) {
+        if self.active {
+            self.timer.tick(delta);
+        }
+    }
+}
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
@@ -44,6 +89,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         Name::new("Player"),
         Speed(200.),
         Actions::<Playing>::default(),
+        AutoFire::new(0.2, false /* TODO: is_firing_active? */),
         SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
         ),
@@ -65,7 +111,7 @@ fn on_spawn_player(
         if player_weapon_q.get(descendant).is_ok() {
             commands
                 .entity(descendant)
-                .insert(PlayerWeaponOwner(trigger.target()));
+                .insert(PlayerWeaponOwnedBy(trigger.target()));
         }
     }
 }
@@ -74,28 +120,29 @@ fn fire_player_projectile(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
-    player_weapon_q: Query<(&Transform, &PlayerWeaponOwner)>,
-    player_q: Query<&Transform, Without<PlayerWeaponOwner>>,
-    mut fire_timer: Local<Option<Timer>>,
+    mut player_q: Query<(&mut AutoFire, &Transform, &PlayerOwnedWeapons), With<Player>>,
+    weapons_q: Query<&Transform, (With<PlayerWeapon>, Without<Player>)>,
 ) {
-    let timer = fire_timer.get_or_insert(Timer::from_seconds(0.2, TimerMode::Repeating));
-    timer.tick(time.delta());
-    if timer.just_finished() {
-        for (weapon_transform, owner) in &player_weapon_q {
-            let Ok(player_transform) = player_q.get(owner.0) else {
-                warn!("Could not find Weapon's owner");
-                continue;
-            };
-            commands.spawn((
-                PlayerProjectile,
-                SceneRoot(asset_server.load(
-                    GltfAssetLabel::Scene(0).from_asset("projectiles/player-projectile.glb"),
-                )),
-                Transform::from_translation(
-                    player_transform.translation.xy().extend(0.)
-                        + weapon_transform.translation.xy().extend(0.),
-                ),
-            ));
+    for (mut auto_fire, player_transform, owned_weapons) in &mut player_q {
+        auto_fire.tick(time.delta());
+        if auto_fire.just_triggered() {
+            for weapon in &owned_weapons.0 {
+                let Ok(weapon_transform) = weapons_q.get(*weapon) else {
+                    warn!("Could not find PlayerWeapon");
+                    continue;
+                };
+
+                commands.spawn((
+                    PlayerProjectile,
+                    SceneRoot(asset_server.load(
+                        GltfAssetLabel::Scene(0).from_asset("projectiles/player-projectile.glb"),
+                    )),
+                    Transform::from_translation(
+                        player_transform.translation.xy().extend(0.)
+                            + weapon_transform.translation.xy().extend(0.),
+                    ),
+                ));
+            }
         }
     }
 }
@@ -121,6 +168,10 @@ fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<P
             Cardinal::dpad_buttons(),
         ))
         .with_modifiers((DeadZone::default(), DeltaScale));
+
+    actions
+        .bind::<Fire>()
+        .to((KeyCode::Space, GamepadButton::South));
 }
 
 fn apply_movement(
@@ -132,9 +183,32 @@ fn apply_movement(
     transform.translation += velocity.extend(0.0);
 }
 
+fn start_firing(trigger: Trigger<Started<Fire>>, mut player_q: Query<&mut AutoFire, With<Player>>) {
+    let Ok(mut auto_fire) = player_q.get_mut(trigger.target()) else {
+        warn!("Could not find Player that started firing");
+        return;
+    };
+    auto_fire.start();
+}
+
+fn completed_firing(
+    trigger: Trigger<Completed<Fire>>,
+    mut player_q: Query<&mut AutoFire, With<Player>>,
+) {
+    let Ok(mut auto_fire) = player_q.get_mut(trigger.target()) else {
+        warn!("Could not find Player that stopped firing");
+        return;
+    };
+    auto_fire.stop();
+}
+
 #[derive(InputContext)]
 struct Playing;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct Fire;
