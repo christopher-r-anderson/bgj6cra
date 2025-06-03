@@ -4,7 +4,7 @@ use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
-use crate::collisions::CollisionLayer;
+use crate::{collisions::CollisionLayer, energy::AttackPoints};
 
 pub struct PlayerPlugin;
 
@@ -135,6 +135,7 @@ fn fire_player_projectile(
 
                 commands.spawn((
                     PlayerProjectile,
+                    AttackPoints(1),
                     SceneRoot(asset_server.load(
                         GltfAssetLabel::Scene(0).from_asset("projectiles/player-projectile.glb"),
                     )),
@@ -156,7 +157,7 @@ fn fire_player_projectile(
     }
 }
 
-#[derive(Event, Clone, Debug, Reflect)]
+#[derive(Event, Clone, Debug, Default, Reflect)]
 pub struct PlayerProjectileCollisionEvent {}
 
 fn on_player_projectile_collision(

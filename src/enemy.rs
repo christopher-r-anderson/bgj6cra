@@ -1,7 +1,10 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::collisions::CollisionLayer;
+use crate::{
+    collisions::CollisionLayer,
+    energy::{AttackPoints, HitPoints},
+};
 
 pub struct EnemyPlugin;
 
@@ -12,7 +15,9 @@ impl Plugin for EnemyPlugin {
             .register_type::<EnemyOne>()
             .register_type::<EnemyOneBase>()
             .add_observer(on_enemy_collision)
+            .add_observer(on_enemy_destroyed)
             .add_observer(on_enemy_base_collision)
+            .add_observer(on_enemy_base_destroyed)
             .add_systems(Startup, setup);
     }
 }
@@ -41,6 +46,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
         ),
+        HitPoints(3),
         Transform::from_xyz(0., 330., 2.),
         RigidBody::Static,
         Collider::rectangle(80., 30.),
@@ -55,6 +61,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         EnemyOne,
         Name::new("EnemyOne"),
         SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb"))),
+        HitPoints(1),
         Transform::from_xyz(-60., 200., 3.),
         RigidBody::Static,
         Collider::rectangle(28., 28.),
@@ -66,6 +73,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         EnemyOne,
         Name::new("EnemyOne"),
         SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb"))),
+        HitPoints(1),
         Transform::from_xyz(-20., 200., 3.),
         RigidBody::Static,
         Collider::rectangle(28., 28.),
@@ -74,16 +82,68 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-#[derive(Event, Clone, Debug, Default, Reflect)]
-pub struct EnemyCollisionEvent {}
+#[derive(Event, Clone, Debug, Reflect)]
+pub struct EnemyCollisionEvent {
+    attacking_points: AttackPoints,
+}
 
-fn on_enemy_collision(trigger: Trigger<EnemyCollisionEvent>) {
-    info!("Enemy Hit: {}", trigger.target());
+impl EnemyCollisionEvent {
+    pub fn new(attacking_points: AttackPoints) -> Self {
+        Self { attacking_points }
+    }
+}
+
+fn on_enemy_collision(
+    trigger: Trigger<EnemyCollisionEvent>,
+    mut commands: Commands,
+    mut enemy_q: Query<&mut HitPoints>,
+) {
+    let Ok(mut hp) = enemy_q.get_mut(trigger.target()) else {
+        warn!("Could not find just collided Enemy");
+        return;
+    };
+    hp.0 = hp.0.saturating_sub(trigger.event().attacking_points.0);
+    if hp.0 == 0 {
+        commands.trigger_targets(EnemyDestroyedEvent {}, trigger.target());
+    }
 }
 
 #[derive(Event, Clone, Debug, Default, Reflect)]
-pub struct EnemyBaseCollisionEvent {}
+pub struct EnemyDestroyedEvent {}
 
-fn on_enemy_base_collision(trigger: Trigger<EnemyBaseCollisionEvent>) {
-    info!("Enemy Base Hit: {}", trigger.target());
+fn on_enemy_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut commands: Commands) {
+    commands.entity(trigger.target()).despawn();
+}
+
+#[derive(Event, Clone, Debug, Reflect)]
+pub struct EnemyBaseCollisionEvent {
+    attacking_points: AttackPoints,
+}
+
+impl EnemyBaseCollisionEvent {
+    pub fn new(attacking_points: AttackPoints) -> Self {
+        Self { attacking_points }
+    }
+}
+
+fn on_enemy_base_collision(
+    trigger: Trigger<EnemyBaseCollisionEvent>,
+    mut commands: Commands,
+    mut enemy_base_q: Query<&mut HitPoints>,
+) {
+    let Ok(mut hp) = enemy_base_q.get_mut(trigger.target()) else {
+        warn!("Could not find just collided EnemyBase");
+        return;
+    };
+    hp.0 = hp.0.saturating_sub(trigger.event().attacking_points.0);
+    if hp.0 == 0 {
+        commands.trigger_targets(EnemyDestroyedEvent {}, trigger.target());
+    }
+}
+
+#[derive(Event, Clone, Debug, Default, Reflect)]
+pub struct EnemyBaseDestroyedEvent {}
+
+fn on_enemy_base_destroyed(trigger: Trigger<EnemyBaseDestroyedEvent>, mut commands: Commands) {
+    commands.entity(trigger.target()).despawn();
 }
