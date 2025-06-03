@@ -25,7 +25,7 @@ impl Plugin for AppPlugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Window {
-                        title: "Bevy Game Jam 6".to_string(),
+                        title: "maxx obliterate - Bevy Game Jam 6".to_string(),
                         fit_canvas_to_parent: true,
                         ..default()
                     }
