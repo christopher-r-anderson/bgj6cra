@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
@@ -18,10 +19,7 @@ impl Plugin for PlayerPlugin {
             .add_observer(completed_firing)
             .add_observer(on_spawn_player)
             .add_systems(Startup, setup)
-            .add_systems(
-                Update,
-                (update_player_projectile_positions, fire_player_projectile).chain(),
-            );
+            .add_systems(Update, fire_player_projectile);
     }
 }
 
@@ -141,18 +139,12 @@ fn fire_player_projectile(
                         player_transform.translation.xy().extend(0.)
                             + weapon_transform.translation.xy().extend(0.),
                     ),
+                    RigidBody::Dynamic,
+                    Collider::circle(4. as Scalar),
+                    LinearVelocity(vec2(0., 200.)),
                 ));
             }
         }
-    }
-}
-
-fn update_player_projectile_positions(
-    time: Res<Time>,
-    mut projectile_q: Query<&mut Transform, With<PlayerProjectile>>,
-) {
-    for mut projectile_transform in &mut projectile_q {
-        projectile_transform.translation.y += 250. * time.delta_secs();
     }
 }
 

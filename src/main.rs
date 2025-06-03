@@ -1,3 +1,4 @@
+use avian2d::prelude::*;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
 use bgj6cra::{
@@ -33,6 +34,8 @@ impl Plugin for AppPlugin {
                 }),
         );
         app.add_plugins(SkeinPlugin::default());
+        app.add_plugins(PhysicsPlugins::default())
+            .insert_resource(Gravity(Vec2::ZERO));
         app.add_plugins((
             AppWindowPlugin,
             DebugPlugin,
