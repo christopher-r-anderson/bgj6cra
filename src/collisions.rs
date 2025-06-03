@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    enemy::{Enemy, EnemyBase, EnemyBaseCollisionEvent, EnemyCollisionEvent},
+    enemy::{EnemyClass, EnemyCollisionEvent, EnemyTeam},
     energy::AttackPoints,
     player::{PlayerProjectile, PlayerProjectileCollisionEvent},
 };
@@ -21,6 +21,8 @@ pub enum CollisionLayer {
     Default,
     Enemy,
     EnemyBase,
+    EnemyExplosion,
+    Player,
     PlayerProjectile,
 }
 
@@ -28,24 +30,40 @@ fn handle_collisions(
     mut collision_event_reader: EventReader<CollisionStarted>,
     mut commands: Commands,
     projectile_q: Query<&AttackPoints, With<PlayerProjectile>>,
-    hit_target_type_q: Query<(Has<Enemy>, Has<EnemyBase>)>,
+    hit_target_type_q: Query<(&EnemyClass, &EnemyTeam)>,
 ) {
     for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
-        let (ap, projectile, hit_target, (is_enemy, is_enemy_base)) =
+        let (projectile, hit_target, enemy_collision_event) =
             match (projectile_q.get(*entity1), projectile_q.get(*entity2)) {
                 (Ok(ap), Err(_)) => {
-                    let Ok(target_type) = hit_target_type_q.get(*entity2) else {
-                        warn!("Couldn't find type of hit target - skipping");
+                    let Ok((target_class, target_team)) = hit_target_type_q.get(*entity2) else {
+                        warn!("Couldn't find enemy class and team of hit target - skipping");
                         continue;
                     };
-                    (ap, *entity1, *entity2, target_type)
+                    (
+                        *entity1,
+                        *entity2,
+                        EnemyCollisionEvent::new(
+                            target_class.clone(),
+                            target_team.clone(),
+                            ap.clone(),
+                        ),
+                    )
                 }
                 (Err(_), Ok(ap)) => {
-                    let Ok(target_type) = hit_target_type_q.get(*entity1) else {
-                        warn!("Couldn't find type of hit target - skipping");
+                    let Ok((target_class, target_team)) = hit_target_type_q.get(*entity1) else {
+                        warn!("Couldn't find enemy class and team of hit target - skipping");
                         continue;
                     };
-                    (ap, *entity2, *entity1, target_type)
+                    (
+                        *entity2,
+                        *entity1,
+                        EnemyCollisionEvent::new(
+                            target_class.clone(),
+                            target_team.clone(),
+                            ap.clone(),
+                        ),
+                    )
                 }
                 (Ok(_), Ok(_)) => {
                     warn!("Both colliding entities are PlayerProjectiles - skipping");
@@ -57,10 +75,6 @@ fn handle_collisions(
                 }
             };
         commands.trigger_targets(PlayerProjectileCollisionEvent::default(), projectile);
-        if is_enemy {
-            commands.trigger_targets(EnemyCollisionEvent::new(ap.clone()), hit_target);
-        } else if is_enemy_base {
-            commands.trigger_targets(EnemyBaseCollisionEvent::new(ap.clone()), hit_target);
-        }
+        commands.trigger_targets(enemy_collision_event, hit_target);
     }
 }
