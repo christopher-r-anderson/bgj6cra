@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
-use bgj6cra::{
+use maxx_obliterate::{
     collisions::CollisionPlugin, debug::DebugPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
     player::PlayerPlugin, stage::StagePlugin, window::AppWindowPlugin,
 };
