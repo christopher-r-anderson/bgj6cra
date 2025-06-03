@@ -2,8 +2,8 @@ use avian2d::prelude::*;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
 use bgj6cra::{
-    debug::DebugPlugin, enemy::EnemyPlugin, player::PlayerPlugin, stage::StagePlugin,
-    window::AppWindowPlugin,
+    collisions::CollisionPlugin, debug::DebugPlugin, enemy::EnemyPlugin, player::PlayerPlugin,
+    stage::StagePlugin, window::AppWindowPlugin,
 };
 
 fn main() -> AppExit {
@@ -38,6 +38,7 @@ impl Plugin for AppPlugin {
             .insert_resource(Gravity(Vec2::ZERO));
         app.add_plugins((
             AppWindowPlugin,
+            CollisionPlugin,
             DebugPlugin,
             EnemyPlugin,
             PlayerPlugin,

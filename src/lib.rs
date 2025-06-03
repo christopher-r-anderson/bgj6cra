@@ -1,3 +1,4 @@
+pub mod collisions;
 pub mod debug;
 pub mod enemy;
 pub mod player;

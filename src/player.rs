@@ -4,6 +4,8 @@ use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
+use crate::collisions::CollisionLayer;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -18,6 +20,7 @@ impl Plugin for PlayerPlugin {
             .add_observer(start_firing)
             .add_observer(completed_firing)
             .add_observer(on_spawn_player)
+            .add_observer(on_player_projectile_collision)
             .add_systems(Startup, setup)
             .add_systems(Update, fire_player_projectile);
     }
@@ -141,11 +144,26 @@ fn fire_player_projectile(
                     ),
                     RigidBody::Dynamic,
                     Collider::circle(4. as Scalar),
+                    CollisionEventsEnabled,
+                    CollisionLayers::new(
+                        CollisionLayer::PlayerProjectile,
+                        [CollisionLayer::Enemy, CollisionLayer::EnemyBase],
+                    ),
                     LinearVelocity(vec2(0., 200.)),
                 ));
             }
         }
     }
+}
+
+#[derive(Event, Clone, Debug, Reflect)]
+pub struct PlayerProjectileCollisionEvent {}
+
+fn on_player_projectile_collision(
+    trigger: Trigger<PlayerProjectileCollisionEvent>,
+    mut commands: Commands,
+) {
+    commands.entity(trigger.target()).despawn();
 }
 
 fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<Playing>>) {
