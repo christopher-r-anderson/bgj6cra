@@ -64,49 +64,88 @@ impl std::fmt::Display for EnemyTeam {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
+    commands.spawn(EnemyBundle::new(
+        &asset_server,
         EnemyTeam::Alien,
         EnemyClass::EnemyBase,
-        Name::new("EnemyOneBase"),
-        SceneRoot(
-            asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
-        ),
-        HitPoints(3),
-        Transform::from_xyz(0., 330., 2.),
-        RigidBody::Static,
-        Collider::rectangle(80., 30.),
-        CollisionEventsEnabled,
-        CollisionLayers::new(
-            CollisionLayer::EnemyBase,
-            [CollisionLayer::PlayerProjectile],
-        ),
+        vec2(0., 330.),
     ));
-    commands.spawn((
-        Enemy,
+    commands.spawn(EnemyBundle::new(
+        &asset_server,
         EnemyTeam::Alien,
         EnemyClass::Enemy,
-        Name::new("Alien Enemy 1"),
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb"))),
-        HitPoints(1),
-        Transform::from_xyz(-60., 200., 3.),
-        RigidBody::Static,
-        Collider::rectangle(28., 28.),
-        CollisionEventsEnabled,
-        CollisionLayers::new(CollisionLayer::Enemy, [CollisionLayer::PlayerProjectile]),
+        vec2(-60., 200.),
     ));
-    commands.spawn((
-        Enemy,
+    commands.spawn(EnemyBundle::new(
+        &asset_server,
         EnemyTeam::Alien,
         EnemyClass::Enemy,
-        Name::new("Alien Enemy 2"),
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb"))),
-        HitPoints(1),
-        Transform::from_xyz(-20., 200., 3.),
-        RigidBody::Static,
-        Collider::rectangle(28., 28.),
-        CollisionEventsEnabled,
-        CollisionLayers::new(CollisionLayer::Enemy, [CollisionLayer::PlayerProjectile]),
+        vec2(-20., 200.),
     ));
+}
+
+#[derive(Bundle)]
+pub struct EnemyBundle {
+    enemy: Enemy,
+    class: EnemyClass,
+    team: EnemyTeam,
+    name: Name,
+    scene: SceneRoot,
+    hp: HitPoints,
+    transform: Transform,
+    rigid_body: RigidBody,
+    collider: Collider,
+    collision_events_enabled: CollisionEventsEnabled,
+    collision_layers: CollisionLayers,
+}
+
+impl EnemyBundle {
+    pub fn new(
+        asset_server: &AssetServer,
+        team: EnemyTeam,
+        class: EnemyClass,
+        position: Vec2,
+    ) -> Self {
+        match class {
+            EnemyClass::EnemyBase => Self {
+                enemy: Enemy,
+                name: Name::new(format!("{team} {class}")),
+                team,
+                class,
+                scene: SceneRoot(
+                    asset_server
+                        .load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
+                ),
+                hp: HitPoints(3),
+                transform: Transform::from_xyz(position.x, position.y, 2.),
+                rigid_body: RigidBody::Static,
+                collider: Collider::rectangle(80., 30.),
+                collision_events_enabled: CollisionEventsEnabled,
+                collision_layers: CollisionLayers::new(
+                    CollisionLayer::EnemyBase,
+                    [CollisionLayer::PlayerProjectile],
+                ),
+            },
+            EnemyClass::Enemy | _ => Self {
+                enemy: Enemy,
+                name: Name::new(format!("{team} {class}")),
+                team,
+                class,
+                scene: SceneRoot(
+                    asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
+                ),
+                hp: HitPoints(1),
+                transform: Transform::from_xyz(position.x, position.y, 3.),
+                rigid_body: RigidBody::Static,
+                collider: Collider::rectangle(28., 28.),
+                collision_events_enabled: CollisionEventsEnabled,
+                collision_layers: CollisionLayers::new(
+                    CollisionLayer::Enemy,
+                    [CollisionLayer::PlayerProjectile],
+                ),
+            },
+        }
+    }
 }
 
 #[derive(Event, Clone, Debug, Reflect)]
