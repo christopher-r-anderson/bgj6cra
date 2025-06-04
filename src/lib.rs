@@ -3,6 +3,8 @@ pub mod debug;
 pub mod enemy;
 pub mod energy;
 pub mod explosion;
+pub mod level;
+pub mod levels;
 pub mod player;
 pub mod stage;
 pub mod window;

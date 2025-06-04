@@ -1,5 +1,7 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 
+use crate::{levels::training_01, player::player};
+
 pub struct StagePlugin;
 
 impl Plugin for StagePlugin {
@@ -33,4 +35,8 @@ fn setup(
         ),
         Transform::default(),
     ));
+
+    let level_config = training_01::get_config(&asset_server);
+    commands.spawn_batch(level_config.enemies);
+    commands.spawn(player(&asset_server, level_config.start_position));
 }

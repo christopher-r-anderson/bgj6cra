@@ -1,0 +1,21 @@
+use bevy::prelude::*;
+
+use crate::enemy::EnemyBundle;
+
+pub struct LevelPlugin;
+
+impl Plugin for LevelPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<Level>();
+    }
+}
+
+#[derive(Component, Clone, Debug, Reflect)]
+#[reflect(Component)]
+pub struct Level;
+
+#[derive(Debug)]
+pub struct LevelConfig {
+    pub start_position: Vec2,
+    pub enemies: Vec<EnemyBundle>,
+}

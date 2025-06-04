@@ -95,7 +95,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Debug)]
 pub struct EnemyBundle {
     enemy: Enemy,
     class: EnemyClass,

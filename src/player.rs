@@ -26,9 +26,31 @@ impl Plugin for PlayerPlugin {
             .add_observer(on_player_projectile_collision)
             .add_observer(on_player_collision)
             .add_observer(on_player_destroyed)
-            .add_systems(Startup, setup)
             .add_systems(Update, fire_player_projectile);
     }
+}
+
+pub fn player(asset_server: &AssetServer, position: Vec2) -> impl Bundle {
+    (
+        Player,
+        Name::new("Player"),
+        Speed(200.),
+        HitPoints(1),
+        Actions::<Playing>::default(),
+        AutoFire::new(0.2, false /* TODO: is_firing_active? */),
+        SceneRoot(
+            asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
+        ),
+        RigidBody::Dynamic,
+        Collider::triangle(
+            vec2(0., 27.304),
+            vec2(20.711, -13.904),
+            vec2(-20.711, -13.904),
+        ),
+        CollisionEventsEnabled,
+        CollisionLayers::new(CollisionLayer::Player, [CollisionLayer::EnemyExplosion]),
+        Transform::from_translation(position.extend(10.)),
+    )
 }
 
 #[derive(Component, Clone, Default, Debug)]
@@ -87,29 +109,6 @@ impl AutoFire {
             self.timer.tick(delta);
         }
     }
-}
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        Player,
-        Name::new("Player"),
-        Speed(200.),
-        HitPoints(1),
-        Actions::<Playing>::default(),
-        AutoFire::new(0.2, false /* TODO: is_firing_active? */),
-        SceneRoot(
-            asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
-        ),
-        RigidBody::Dynamic,
-        Collider::triangle(
-            vec2(0., 27.304),
-            vec2(20.711, -13.904),
-            vec2(-20.711, -13.904),
-        ),
-        CollisionEventsEnabled,
-        CollisionLayers::new(CollisionLayer::Player, [CollisionLayer::EnemyExplosion]),
-        Transform::default(),
-    ));
 }
 
 fn on_spawn_player(
