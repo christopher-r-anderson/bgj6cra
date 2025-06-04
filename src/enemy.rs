@@ -5,6 +5,7 @@ use crate::{
     collisions::CollisionLayer,
     energy::{AttackPoints, HitPoints},
     explosion::ExplosionChain,
+    screen::Screen,
 };
 
 pub const ENEMY_SIZE: Vec2 = Vec2::new(28., 28.);
@@ -95,7 +96,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-#[derive(Bundle, Debug)]
+#[derive(Bundle)]
 pub struct EnemyBundle {
     enemy: Enemy,
     class: EnemyClass,
@@ -108,6 +109,9 @@ pub struct EnemyBundle {
     collider: Collider,
     collision_events_enabled: CollisionEventsEnabled,
     collision_layers: CollisionLayers,
+
+    // TODO: specify scope outside of file to reduce coupling and potentially put Debug derive back on EnemyBundle and LevelConfig
+    state_scoped: StateScoped<Screen>,
 }
 
 impl EnemyBundle {
@@ -136,6 +140,7 @@ impl EnemyBundle {
                     CollisionLayer::EnemyBase,
                     [CollisionLayer::PlayerProjectile],
                 ),
+                state_scoped: StateScoped(Screen::Gameplay),
             },
 
             /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
@@ -156,6 +161,7 @@ impl EnemyBundle {
                     CollisionLayer::Enemy,
                     [CollisionLayer::PlayerProjectile],
                 ),
+                state_scoped: StateScoped(Screen::Gameplay),
             },
         }
     }

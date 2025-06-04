@@ -14,7 +14,6 @@ impl Plugin for LevelPlugin {
 #[reflect(Component)]
 pub struct Level;
 
-#[derive(Debug)]
 pub struct LevelConfig {
     pub start_position: Vec2,
     pub enemies: Vec<EnemyBundle>,

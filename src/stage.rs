@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 
-use crate::{levels::training_01, player::player};
+use crate::screen::Screen;
 
 pub struct StagePlugin;
 
@@ -10,11 +10,7 @@ impl Plugin for StagePlugin {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut ambient_light: ResMut<AmbientLight>,
-) {
+fn setup(mut commands: Commands, mut ambient_light: ResMut<AmbientLight>) {
     ambient_light.brightness = 1000.0;
 
     commands.spawn((
@@ -27,16 +23,15 @@ fn setup(
         }),
         Transform::from_xyz(0., 0., 100.).looking_at(Vec3::ZERO, Vec3::Y),
     ));
+}
 
+pub fn spawn_stage(mut commands: Commands, asset_server: &AssetServer) {
     commands.spawn((
+        // TODO: specify scope outside of file to reduce coupling
+        StateScoped(Screen::Gameplay),
         SceneRoot(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("backgrounds/generic-background.glb")),
         ),
-        Transform::default(),
     ));
-
-    let level_config = training_01::get_config(&asset_server);
-    commands.spawn_batch(level_config.enemies);
-    commands.spawn(player(&asset_server, level_config.start_position));
 }

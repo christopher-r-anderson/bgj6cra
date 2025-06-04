@@ -3,8 +3,8 @@ use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
 use maxx_obliterate::{
     collisions::CollisionPlugin, debug::DebugPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
-    explosion::ExplosionPlugin, level::LevelPlugin, player::PlayerPlugin, stage::StagePlugin,
-    window::AppWindowPlugin,
+    explosion::ExplosionPlugin, level::LevelPlugin, menu::MenuPlugin, player::PlayerPlugin,
+    screen::ScreenPlugin, stage::StagePlugin, window::AppWindowPlugin,
 };
 
 fn main() -> AppExit {
@@ -45,7 +45,9 @@ impl Plugin for AppPlugin {
             EnergyPlugin,
             ExplosionPlugin,
             LevelPlugin,
+            MenuPlugin,
             PlayerPlugin,
+            ScreenPlugin,
             StagePlugin,
         ));
     }

@@ -30,7 +30,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-pub fn player(asset_server: &AssetServer, position: Vec2) -> impl Bundle {
+pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle {
     (
         Player,
         Name::new("Player"),
