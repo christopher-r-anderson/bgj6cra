@@ -5,6 +5,7 @@ use crate::gameplay::{
     enemy::{EnemyClass, EnemyCollisionEvent, EnemyTeam},
     energy::AttackPoints,
     explosion::{Explosion, ExplosionCollisionEvent},
+    level::LevelState,
     player::{PlayerCollisionEvent, PlayerProjectile, PlayerProjectileCollisionEvent},
 };
 
@@ -17,7 +18,8 @@ impl Plugin for CollisionPlugin {
             (
                 handle_explosion_collisions,
                 handle_player_projectile_collisions,
-            ),
+            )
+                .run_if(in_state(LevelState::Playing)),
         );
     }
 }

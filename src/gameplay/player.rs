@@ -7,6 +7,7 @@ use bevy_enhanced_input::prelude::*;
 use crate::gameplay::{
     collisions::CollisionLayer,
     energy::{AttackPoints, HitPoints},
+    level::LevelState,
 };
 
 pub struct PlayerPlugin;
@@ -26,7 +27,10 @@ impl Plugin for PlayerPlugin {
             .add_observer(on_player_projectile_collision)
             .add_observer(on_player_collision)
             .add_observer(on_player_destroyed)
-            .add_systems(Update, fire_player_projectile);
+            .add_systems(
+                Update,
+                fire_player_projectile.run_if(in_state(LevelState::Playing)),
+            );
     }
 }
 

@@ -10,6 +10,7 @@ use crate::gameplay::{
         EnemyDestructionSource, EnemyTeam,
     },
     energy::AttackPoints,
+    level::LevelState,
 };
 
 pub struct ExplosionPlugin;
@@ -20,8 +21,10 @@ impl Plugin for ExplosionPlugin {
             .add_observer(on_enemy_destroyed)
             .add_observer(on_explosion_chain_event)
             .add_observer(on_explosion_collision)
-            .add_systems(FixedUpdate, tick_explosion_chain)
-            .add_systems(FixedUpdate, update_explosion);
+            .add_systems(
+                FixedUpdate,
+                (tick_explosion_chain, update_explosion).run_if(in_state(LevelState::Playing)),
+            );
     }
 }
 
