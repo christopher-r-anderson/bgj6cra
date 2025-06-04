@@ -4,7 +4,10 @@ use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
-use crate::{collisions::CollisionLayer, energy::AttackPoints};
+use crate::{
+    collisions::CollisionLayer,
+    energy::{AttackPoints, HitPoints},
+};
 
 pub struct PlayerPlugin;
 
@@ -21,6 +24,8 @@ impl Plugin for PlayerPlugin {
             .add_observer(completed_firing)
             .add_observer(on_spawn_player)
             .add_observer(on_player_projectile_collision)
+            .add_observer(on_player_collision)
+            .add_observer(on_player_destroyed)
             .add_systems(Startup, setup)
             .add_systems(Update, fire_player_projectile);
     }
@@ -89,11 +94,20 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         Player,
         Name::new("Player"),
         Speed(200.),
+        HitPoints(1),
         Actions::<Playing>::default(),
         AutoFire::new(0.2, false /* TODO: is_firing_active? */),
         SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
         ),
+        RigidBody::Dynamic,
+        Collider::triangle(
+            vec2(0., 27.304),
+            vec2(20.711, -13.904),
+            vec2(-20.711, -13.904),
+        ),
+        CollisionEventsEnabled,
+        CollisionLayers::new(CollisionLayer::Player, [CollisionLayer::EnemyExplosion]),
         Transform::default(),
     ));
 }
@@ -155,6 +169,39 @@ fn fire_player_projectile(
             }
         }
     }
+}
+
+#[derive(Event, Clone, Debug, Reflect)]
+pub struct PlayerCollisionEvent {
+    attacking_points: AttackPoints,
+}
+
+impl PlayerCollisionEvent {
+    pub fn new(attacking_points: AttackPoints) -> Self {
+        Self { attacking_points }
+    }
+}
+
+fn on_player_collision(
+    trigger: Trigger<PlayerCollisionEvent>,
+    mut commands: Commands,
+    mut player_q: Query<&mut HitPoints>,
+) {
+    let Ok(mut hp) = player_q.get_mut(trigger.target()) else {
+        warn!("Could not find colliding Player's Hp");
+        return;
+    };
+    hp.0 = hp.0.saturating_sub(trigger.event().attacking_points.0);
+    if hp.0 == 0 {
+        commands.trigger_targets(PlayerDestroyedEvent::default(), trigger.target());
+    }
+}
+
+#[derive(Event, Clone, Debug, Default, Reflect)]
+pub struct PlayerDestroyedEvent {}
+
+fn on_player_destroyed(trigger: Trigger<PlayerDestroyedEvent>, mut commands: Commands) {
+    commands.entity(trigger.target()).despawn();
 }
 
 #[derive(Event, Clone, Debug, Default, Reflect)]

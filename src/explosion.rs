@@ -9,6 +9,7 @@ use crate::{
         ENEMY_BASE_SIZE, ENEMY_SIZE, Enemy, EnemyClass, EnemyDestroyedEvent,
         EnemyDestructionSource, EnemyTeam,
     },
+    energy::AttackPoints,
 };
 
 pub struct ExplosionPlugin;
@@ -18,6 +19,7 @@ impl Plugin for ExplosionPlugin {
         app.register_type::<Explosion>()
             .add_observer(on_enemy_destroyed)
             .add_observer(on_explosion_chain_event)
+            .add_observer(on_explosion_collision)
             .add_systems(FixedUpdate, tick_explosion_chain)
             .add_systems(FixedUpdate, update_explosion);
     }
@@ -57,16 +59,24 @@ fn on_enemy_destroyed(
     };
     commands.spawn((
         Explosion,
+        AttackPoints(1),
         class.clone(),
         ExplosionLifecycle(Timer::from_seconds(2., TimerMode::Once)),
         Name::new("EnemyExplosion"),
         SceneRoot(scene),
         Transform::from_translation(position.extend(5.)),
-        RigidBody::Static,
+        RigidBody::Dynamic,
         collider,
         CollisionEventsEnabled,
         CollisionLayers::new(CollisionLayer::EnemyExplosion, [CollisionLayer::Player]),
     ));
+}
+
+#[derive(Event, Clone, Debug, Default, Reflect)]
+pub struct ExplosionCollisionEvent {}
+
+fn on_explosion_collision(trigger: Trigger<ExplosionCollisionEvent>, mut commands: Commands) {
+    commands.entity(trigger.target()).despawn();
 }
 
 #[derive(Event, Clone, Debug, Reflect)]

@@ -4,14 +4,21 @@ use bevy::prelude::*;
 use crate::{
     enemy::{EnemyClass, EnemyCollisionEvent, EnemyTeam},
     energy::AttackPoints,
-    player::{PlayerProjectile, PlayerProjectileCollisionEvent},
+    explosion::{Explosion, ExplosionCollisionEvent},
+    player::{PlayerCollisionEvent, PlayerProjectile, PlayerProjectileCollisionEvent},
 };
 
 pub struct CollisionPlugin;
 
 impl Plugin for CollisionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, handle_collisions);
+        app.add_systems(
+            Update,
+            (
+                handle_explosion_collisions,
+                handle_player_projectile_collisions,
+            ),
+        );
     }
 }
 
@@ -26,7 +33,7 @@ pub enum CollisionLayer {
     PlayerProjectile,
 }
 
-fn handle_collisions(
+fn handle_player_projectile_collisions(
     mut collision_event_reader: EventReader<CollisionStarted>,
     mut commands: Commands,
     projectile_q: Query<&AttackPoints, With<PlayerProjectile>>,
@@ -65,16 +72,29 @@ fn handle_collisions(
                         ),
                     )
                 }
-                (Ok(_), Ok(_)) => {
-                    warn!("Both colliding entities are PlayerProjectiles - skipping");
-                    continue;
-                }
-                (Err(_), Err(_)) => {
-                    warn!("Neither colliding entities are PlayerProjectiles - skipping");
+                _ => {
                     continue;
                 }
             };
         commands.trigger_targets(PlayerProjectileCollisionEvent::default(), projectile);
         commands.trigger_targets(enemy_collision_event, hit_target);
+    }
+}
+
+fn handle_explosion_collisions(
+    mut collision_event_reader: EventReader<CollisionStarted>,
+    mut commands: Commands,
+    explosion_q: Query<&AttackPoints, With<Explosion>>,
+) {
+    for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
+        let (explosion, player, ap) = match (explosion_q.get(*entity1), explosion_q.get(*entity2)) {
+            (Ok(ap), Err(_)) => (*entity1, *entity2, ap.clone()),
+            (Err(_), Ok(ap)) => (*entity2, *entity1, ap.clone()),
+            _ => {
+                continue;
+            }
+        };
+        commands.trigger_targets(PlayerCollisionEvent::new(ap), player);
+        commands.trigger_targets(ExplosionCollisionEvent::default(), explosion);
     }
 }

@@ -87,6 +87,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         EnemyClass::Enemy,
         vec2(-20., 200.),
     ));
+    commands.spawn(EnemyBundle::new(
+        &asset_server,
+        EnemyTeam::Alien,
+        EnemyClass::Enemy,
+        vec2(40., 0.),
+    ));
 }
 
 #[derive(Bundle)]
