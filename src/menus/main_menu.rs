@@ -26,8 +26,7 @@ pub fn spawn_menu(mut commands: Commands, asset_server: &AssetServer) {
                 spawner.spawn((button("Training"), AutoFocus)).observe(
                     |_trigger: Trigger<ButtonActivate>,
                      mut next_state: ResMut<NextState<Screen>>| {
-                        info!("Clicked");
-                        next_state.set(Screen::Gameplay);
+                        next_state.set(Screen::ResetGameplay);
                     },
                 );
 
