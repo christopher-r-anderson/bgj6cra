@@ -137,7 +137,9 @@ impl EnemyBundle {
                     [CollisionLayer::PlayerProjectile],
                 ),
             },
-            EnemyClass::Enemy | _ => Self {
+
+            /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
+            _ => Self {
                 enemy: Enemy,
                 name: Name::new(format!("{team} {class}")),
                 team,
