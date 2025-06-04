@@ -2,9 +2,11 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    collisions::CollisionLayer,
-    energy::{AttackPoints, HitPoints},
-    explosion::ExplosionChain,
+    gameplay::{
+        collisions::CollisionLayer,
+        energy::{AttackPoints, HitPoints},
+        explosion::ExplosionChain,
+    },
     screen::Screen,
 };
 

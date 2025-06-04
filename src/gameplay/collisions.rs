@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::{
+use crate::gameplay::{
     enemy::{EnemyClass, EnemyCollisionEvent, EnemyTeam},
     energy::AttackPoints,
     explosion::{Explosion, ExplosionCollisionEvent},

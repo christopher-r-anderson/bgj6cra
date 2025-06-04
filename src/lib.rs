@@ -1,14 +1,8 @@
-pub mod collisions;
 pub mod debug;
-pub mod enemy;
-pub mod energy;
-pub mod explosion;
-pub mod level;
+pub mod gameplay;
 pub mod levels;
 pub mod menu;
 pub mod menus;
-pub mod player;
 pub mod screen;
 pub mod screens;
-pub mod stage;
 pub mod window;

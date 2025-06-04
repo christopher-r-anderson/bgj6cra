@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::enemy::EnemyBundle;
+use crate::gameplay::enemy::EnemyBundle;
 
 pub struct LevelPlugin;
 

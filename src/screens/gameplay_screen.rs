@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{levels::training_01, player::player_bundle, screen::Screen, stage::spawn_stage};
+use crate::{
+    gameplay::{player::player_bundle, stage::spawn_stage},
+    levels::training_01,
+    screen::Screen,
+};
 
 pub struct GameplayScreenPlugin;
 

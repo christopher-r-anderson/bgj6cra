@@ -2,9 +2,14 @@ use avian2d::prelude::*;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
 use maxx_obliterate::{
-    collisions::CollisionPlugin, debug::DebugPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
-    explosion::ExplosionPlugin, level::LevelPlugin, menu::MenuPlugin, player::PlayerPlugin,
-    screen::ScreenPlugin, stage::StagePlugin, window::AppWindowPlugin,
+    debug::DebugPlugin,
+    gameplay::{
+        collisions::CollisionPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
+        explosion::ExplosionPlugin, level::LevelPlugin, player::PlayerPlugin, stage::StagePlugin,
+    },
+    menu::MenuPlugin,
+    screen::ScreenPlugin,
+    window::AppWindowPlugin,
 };
 
 fn main() -> AppExit {

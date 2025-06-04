@@ -4,7 +4,7 @@ use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
-use crate::{
+use crate::gameplay::{
     collisions::CollisionLayer,
     energy::{AttackPoints, HitPoints},
 };

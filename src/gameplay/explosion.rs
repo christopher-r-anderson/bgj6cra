@@ -3,7 +3,7 @@ use std::time::Duration;
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::{
+use crate::gameplay::{
     collisions::CollisionLayer,
     enemy::{
         ENEMY_BASE_SIZE, ENEMY_SIZE, Enemy, EnemyClass, EnemyDestroyedEvent,

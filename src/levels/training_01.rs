@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
+use crate::gameplay::{
     enemy::{EnemyBundle, EnemyClass, EnemyTeam},
     level::LevelConfig,
 };
