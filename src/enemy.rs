@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use crate::{
     collisions::CollisionLayer,
     energy::{AttackPoints, HitPoints},
+    explosion::ExplosionChain,
 };
 
 pub struct EnemyPlugin;
@@ -14,7 +15,8 @@ impl Plugin for EnemyPlugin {
             .register_type::<EnemyClass>()
             .register_type::<EnemyTeam>()
             .add_observer(on_enemy_collision)
-            .add_observer(on_enemy_destroyed)
+            .add_observer(remove_enemy_when_destroyed)
+            .add_observer(spawn_chain_when_destroyed_by_player)
             .add_systems(Startup, setup);
     }
 }
@@ -23,7 +25,7 @@ impl Plugin for EnemyPlugin {
 #[reflect(Component)]
 pub struct Enemy;
 
-#[derive(Component, Clone, Debug, Reflect)]
+#[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyClass {
     Enemy,
@@ -43,7 +45,7 @@ impl std::fmt::Display for EnemyClass {
     }
 }
 
-#[derive(Component, Clone, Debug, Reflect)]
+#[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyTeam {
     Alien,
@@ -179,6 +181,7 @@ fn on_enemy_collision(
         commands.trigger_targets(
             EnemyDestroyedEvent {
                 class: class.clone(),
+                destruction_source: EnemyDestructionSource::Player,
                 position: transform.translation.truncate(),
                 team: team.clone(),
             },
@@ -187,13 +190,37 @@ fn on_enemy_collision(
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Reflect)]
+pub enum EnemyDestructionSource {
+    ExplosionChain,
+    Player,
+}
+
 #[derive(Event, Clone, Debug, Reflect)]
 pub struct EnemyDestroyedEvent {
     pub class: EnemyClass,
+    pub destruction_source: EnemyDestructionSource,
     pub position: Vec2,
     pub team: EnemyTeam,
 }
 
-fn on_enemy_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut commands: Commands) {
+fn remove_enemy_when_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut commands: Commands) {
     commands.entity(trigger.target()).despawn();
+}
+
+fn spawn_chain_when_destroyed_by_player(
+    trigger: Trigger<EnemyDestroyedEvent>,
+    mut commands: Commands,
+) {
+    let EnemyDestroyedEvent {
+        class,
+        destruction_source,
+        position: _,
+        team,
+    } = trigger.event();
+    if destruction_source == &EnemyDestructionSource::Player {
+        if let Some(next_stage) = ExplosionChain::following_stage(class) {
+            commands.spawn(ExplosionChain::new(team.clone(), next_stage));
+        }
+    }
 }
