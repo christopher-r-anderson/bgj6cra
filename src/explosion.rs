@@ -5,7 +5,10 @@ use bevy::prelude::*;
 
 use crate::{
     collisions::CollisionLayer,
-    enemy::{Enemy, EnemyClass, EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam},
+    enemy::{
+        ENEMY_BASE_SIZE, ENEMY_SIZE, Enemy, EnemyClass, EnemyDestroyedEvent,
+        EnemyDestructionSource, EnemyTeam,
+    },
 };
 
 pub struct ExplosionPlugin;
@@ -15,13 +18,18 @@ impl Plugin for ExplosionPlugin {
         app.register_type::<Explosion>()
             .add_observer(on_enemy_destroyed)
             .add_observer(on_explosion_chain_event)
-            .add_systems(FixedUpdate, tick_explosion_chain);
+            .add_systems(FixedUpdate, tick_explosion_chain)
+            .add_systems(FixedUpdate, update_explosion);
     }
 }
 
 #[derive(Component, Debug, Clone, Reflect)]
 #[reflect(Component)]
 pub struct Explosion;
+
+#[derive(Component, Debug, Clone, Reflect)]
+#[reflect(Component)]
+struct ExplosionLifecycle(Timer);
 
 fn on_enemy_destroyed(
     trigger: Trigger<EnemyDestroyedEvent>,
@@ -37,19 +45,20 @@ fn on_enemy_destroyed(
 
     let (collider, scene) = match class {
         EnemyClass::EnemyBase => (
-            Collider::rectangle(80., 30.),
+            Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-base-explosion.glb")),
         ),
         EnemyClass::Enemy | _ => (
-            Collider::rectangle(28., 28.),
+            Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-explosion.glb")),
         ),
     };
-
     commands.spawn((
         Explosion,
+        class.clone(),
+        ExplosionLifecycle(Timer::from_seconds(2., TimerMode::Once)),
         Name::new("EnemyExplosion"),
         SceneRoot(scene),
         Transform::from_translation(position.extend(5.)),
@@ -147,6 +156,34 @@ fn on_explosion_chain_event(
                 },
                 entity,
             );
+        }
+    }
+}
+
+fn update_explosion(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut explosions_q: Query<
+        (
+            Entity,
+            &mut ExplosionLifecycle,
+            &mut Transform,
+            &mut Collider,
+            &EnemyClass,
+        ),
+        With<Explosion>,
+    >,
+) {
+    for (entity, mut explosion_lifecycle, mut transform, mut collider, class) in &mut explosions_q {
+        explosion_lifecycle.0.tick(time.delta());
+        if explosion_lifecycle.0.just_finished() {
+            commands.entity(entity).despawn();
+        } else {
+            transform.scale = Vec3::splat(1. + 2. * explosion_lifecycle.0.fraction());
+            *collider = match class {
+                EnemyClass::EnemyBase => Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
+                EnemyClass::Enemy | _ => Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
+            };
         }
     }
 }

@@ -7,6 +7,9 @@ use crate::{
     explosion::ExplosionChain,
 };
 
+pub const ENEMY_SIZE: Vec2 = Vec2::new(28., 28.);
+pub const ENEMY_BASE_SIZE: Vec2 = Vec2::new(80., 30.);
+
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
@@ -121,7 +124,7 @@ impl EnemyBundle {
                 hp: HitPoints(3),
                 transform: Transform::from_xyz(position.x, position.y, 2.),
                 rigid_body: RigidBody::Static,
-                collider: Collider::rectangle(80., 30.),
+                collider: Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
                 collision_events_enabled: CollisionEventsEnabled,
                 collision_layers: CollisionLayers::new(
                     CollisionLayer::EnemyBase,
@@ -139,7 +142,7 @@ impl EnemyBundle {
                 hp: HitPoints(1),
                 transform: Transform::from_xyz(position.x, position.y, 3.),
                 rigid_body: RigidBody::Static,
-                collider: Collider::rectangle(28., 28.),
+                collider: Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
                 collision_events_enabled: CollisionEventsEnabled,
                 collision_layers: CollisionLayers::new(
                     CollisionLayer::Enemy,
