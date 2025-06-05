@@ -15,7 +15,7 @@ pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<LevelState>()
+        app.add_sub_state::<LevelState>()
             .register_type::<Level>()
             .add_observer(on_enemy_destroyed)
             .add_observer(on_player_destroyed)
