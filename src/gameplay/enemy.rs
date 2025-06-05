@@ -22,8 +22,7 @@ impl Plugin for EnemyPlugin {
             .register_type::<EnemyTeam>()
             .add_observer(on_enemy_collision)
             .add_observer(remove_enemy_when_destroyed)
-            .add_observer(spawn_chain_when_destroyed_by_player)
-            .add_systems(Startup, setup);
+            .add_observer(spawn_chain_when_destroyed_by_player);
     }
 }
 
@@ -69,33 +68,6 @@ impl std::fmt::Display for EnemyTeam {
             EnemyTeam::Skull => write!(f, "Skull"),
         }
     }
-}
-
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(EnemyBundle::new(
-        &asset_server,
-        EnemyTeam::Alien,
-        EnemyClass::EnemyBase,
-        vec2(0., 330.),
-    ));
-    commands.spawn(EnemyBundle::new(
-        &asset_server,
-        EnemyTeam::Alien,
-        EnemyClass::Enemy,
-        vec2(-60., 200.),
-    ));
-    commands.spawn(EnemyBundle::new(
-        &asset_server,
-        EnemyTeam::Alien,
-        EnemyClass::Enemy,
-        vec2(-20., 200.),
-    ));
-    commands.spawn(EnemyBundle::new(
-        &asset_server,
-        EnemyTeam::Alien,
-        EnemyClass::Enemy,
-        vec2(40., 0.),
-    ));
 }
 
 #[derive(Bundle)]
