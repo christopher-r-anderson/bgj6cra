@@ -5,10 +5,10 @@ use crate::{
     gameplay::{
         enemy::{Enemy, EnemyBundle, EnemyDestroyedEvent},
         explosion::Explosion,
+        game_run::{GameRun, LevelStatus},
         player::{PlayerDestroyedEvent, player_bundle},
         stage::spawn_stage,
     },
-    levels::training_01,
     menus::level_complete::spawn_level_complete_menu,
 };
 
@@ -25,7 +25,7 @@ impl Plugin for LevelPlugin {
                 check_level_complete.run_if(in_state(LevelState::Playing)),
             )
             .add_systems(OnEnter(LevelState::Loading), spawn_level)
-            .add_systems(OnEnter(LevelState::Complete), show_level_complete_menu)
+            .add_systems(OnEnter(LevelState::Complete), on_level_complete)
             .add_systems(
                 FixedUpdate,
                 check_load_status.run_if(in_state(LevelState::Loading)),
@@ -71,8 +71,8 @@ pub enum LevelState {
     Complete,
 }
 
-fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let level_config = training_01::get_config(&asset_server);
+fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run: Single<&GameRun>) {
+    let level_config = game_run.current_level_config(&asset_server);
     commands.spawn((
         StateScoped(AppState::Gameplay),
         LevelStats::new(
@@ -124,10 +124,16 @@ fn on_player_destroyed(
     next_state.set(LevelState::Complete);
 }
 
-fn show_level_complete_menu(
+fn on_level_complete(
     commands: Commands,
     asset_server: Res<AssetServer>,
     level_stats: Single<&LevelStats>,
+    mut game_run: Single<&mut GameRun>,
 ) {
-    spawn_level_complete_menu(commands, &asset_server, &level_stats);
+    game_run.set_current_level_status(if level_stats.success == Some(true) {
+        LevelStatus::Completed
+    } else {
+        LevelStatus::Tried
+    });
+    spawn_level_complete_menu(commands, &asset_server, &level_stats, &game_run);
 }
