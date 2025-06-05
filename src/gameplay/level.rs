@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    app_state::AppState,
     gameplay::{
         enemy::{Enemy, EnemyBundle, EnemyDestroyedEvent},
         explosion::Explosion,
@@ -9,7 +10,6 @@ use crate::{
     },
     levels::training_01,
     menus::level_complete::spawn_level_complete_menu,
-    screen::Screen,
 };
 
 pub struct LevelPlugin;
@@ -61,7 +61,7 @@ pub struct LevelConfig {
 }
 
 #[derive(SubStates, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-#[source(Screen = Screen::Gameplay)]
+#[source(AppState = AppState::Gameplay)]
 #[states(scoped_entities)]
 pub enum LevelState {
     #[default]
@@ -74,7 +74,7 @@ pub enum LevelState {
 fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     let level_config = training_01::get_config(&asset_server);
     commands.spawn((
-        StateScoped(Screen::Gameplay),
+        StateScoped(AppState::Gameplay),
         LevelStats::new(
             level_config
                 .enemies
@@ -85,7 +85,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
     commands.spawn_batch(level_config.enemies);
     commands.spawn((
-        StateScoped(Screen::Gameplay),
+        StateScoped(AppState::Gameplay),
         player_bundle(&asset_server, level_config.start_position),
     ));
     spawn_stage(commands, &asset_server);

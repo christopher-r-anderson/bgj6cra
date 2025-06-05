@@ -4,6 +4,7 @@ use bevy_skein::SkeinPlugin;
 #[cfg(debug_assertions)]
 use maxx_obliterate::debug::DebugPlugin;
 use maxx_obliterate::{
+    app_state::AppStatePlugin,
     gameplay::{
         collisions::CollisionPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
         explosion::ExplosionPlugin, level::LevelPlugin, player::PlayerPlugin, stage::StagePlugin,
@@ -44,6 +45,7 @@ impl Plugin for AppPlugin {
         app.add_plugins(PhysicsPlugins::default())
             .insert_resource(Gravity(Vec2::ZERO));
         app.add_plugins((
+            AppStatePlugin,
             AppWindowPlugin,
             CollisionPlugin,
             #[cfg(debug_assertions)]

@@ -2,12 +2,12 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
+    app_state::AppState,
     gameplay::{
         collisions::CollisionLayer,
         energy::{AttackPoints, HitPoints},
         explosion::ExplosionChain,
     },
-    screen::Screen,
 };
 
 pub const ENEMY_SIZE: Vec2 = Vec2::new(28., 28.);
@@ -85,7 +85,7 @@ pub struct EnemyBundle {
     collision_layers: CollisionLayers,
 
     // TODO: specify scope outside of file to reduce coupling and potentially put Debug derive back on EnemyBundle and LevelConfig
-    state_scoped: StateScoped<Screen>,
+    state_scoped: StateScoped<AppState>,
 }
 
 impl EnemyBundle {
@@ -114,7 +114,7 @@ impl EnemyBundle {
                     CollisionLayer::EnemyBase,
                     [CollisionLayer::PlayerProjectile],
                 ),
-                state_scoped: StateScoped(Screen::Gameplay),
+                state_scoped: StateScoped(AppState::Gameplay),
             },
 
             /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
@@ -135,7 +135,7 @@ impl EnemyBundle {
                     CollisionLayer::Enemy,
                     [CollisionLayer::PlayerProjectile],
                 ),
-                state_scoped: StateScoped(Screen::Gameplay),
+                state_scoped: StateScoped(AppState::Gameplay),
             },
         }
     }

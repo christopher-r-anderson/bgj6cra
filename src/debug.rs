@@ -1,7 +1,7 @@
 use avian2d::prelude::PhysicsDebugPlugin;
 use bevy::{dev_tools::states::log_transitions, prelude::*};
 
-use crate::{gameplay::level::LevelState, screen::Screen};
+use crate::{app_state::AppState, gameplay::level::LevelState};
 
 const DEBUG_PHYSICS: bool = true;
 const DEBUG_SCREEN_STATE: bool = false;
@@ -17,7 +17,7 @@ impl Plugin for DebugPlugin {
             app.add_plugins(PhysicsDebugPlugin::default());
         }
         if DEBUG_SCREEN_STATE {
-            app.add_systems(Update, log_transitions::<Screen>);
+            app.add_systems(Update, log_transitions::<AppState>);
         }
         if DEBUG_LEVEL_STATE {
             app.add_systems(Update, log_transitions::<LevelState>);

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 
-use crate::screen::Screen;
+use crate::app_state::AppState;
 
 pub struct StagePlugin;
 
@@ -28,7 +28,7 @@ fn setup(mut commands: Commands, mut ambient_light: ResMut<AmbientLight>) {
 pub fn spawn_stage(mut commands: Commands, asset_server: &AssetServer) {
     commands.spawn((
         // TODO: specify scope outside of file to reduce coupling
-        StateScoped(Screen::Gameplay),
+        StateScoped(AppState::Gameplay),
         SceneRoot(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("backgrounds/generic-background.glb")),

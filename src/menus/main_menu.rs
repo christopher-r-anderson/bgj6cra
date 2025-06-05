@@ -2,13 +2,13 @@ use bevy::{ecs::spawn::SpawnWith, input_focus::AutoFocus, prelude::*};
 use bevy_flair::style::components::NodeStyleSheet;
 
 use crate::{
+    app_state::AppState,
     menu::{ButtonActivate, NavigableChildren, button},
-    screen::Screen,
 };
 
 pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
     commands.spawn((
-        StateScoped(Screen::Title),
+        StateScoped(AppState::Title),
         Name::new("Root"),
         Node::default(),
         NodeStyleSheet::new(asset_server.load("styles/game_menu.css")),
@@ -25,8 +25,8 @@ pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
 
                 spawner.spawn((button("Training"), AutoFocus)).observe(
                     |_trigger: Trigger<ButtonActivate>,
-                     mut next_state: ResMut<NextState<Screen>>| {
-                        next_state.set(Screen::ResetGameplay);
+                     mut next_state: ResMut<NextState<AppState>>| {
+                        next_state.set(AppState::ResetGameplay);
                     },
                 );
 

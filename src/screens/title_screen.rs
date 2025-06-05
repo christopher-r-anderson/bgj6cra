@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-use crate::{menus::main_menu, screen::Screen};
+use crate::{app_state::AppState, menus::main_menu};
 
 pub struct TitleScreenPlugin;
 
 impl Plugin for TitleScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(Screen::Title), spawn_main_menu);
+        app.add_systems(OnEnter(AppState::Title), spawn_main_menu);
     }
 }
 
