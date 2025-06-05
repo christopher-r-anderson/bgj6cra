@@ -1,8 +1,9 @@
 use avian2d::prelude::*;
 use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_skein::SkeinPlugin;
+#[cfg(debug_assertions)]
+use maxx_obliterate::debug::DebugPlugin;
 use maxx_obliterate::{
-    debug::DebugPlugin,
     gameplay::{
         collisions::CollisionPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
         explosion::ExplosionPlugin, level::LevelPlugin, player::PlayerPlugin, stage::StagePlugin,
@@ -45,6 +46,7 @@ impl Plugin for AppPlugin {
         app.add_plugins((
             AppWindowPlugin,
             CollisionPlugin,
+            #[cfg(debug_assertions)]
             DebugPlugin,
             EnemyPlugin,
             EnergyPlugin,

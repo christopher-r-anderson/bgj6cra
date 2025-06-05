@@ -1,3 +1,4 @@
+#[cfg(debug_assertions)]
 pub mod debug;
 pub mod gameplay;
 pub mod levels;
