@@ -6,7 +6,7 @@ use crate::{
     screen::Screen,
 };
 
-pub fn spawn_menu(mut commands: Commands, asset_server: &AssetServer) {
+pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
     commands.spawn((
         StateScoped(Screen::Title),
         Name::new("Root"),

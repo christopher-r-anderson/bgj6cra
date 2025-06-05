@@ -8,6 +8,7 @@ use crate::{
         stage::spawn_stage,
     },
     levels::training_01,
+    menus::level_complete::spawn_level_complete_menu,
     screen::Screen,
 };
 
@@ -24,7 +25,7 @@ impl Plugin for LevelPlugin {
                 check_level_complete.run_if(in_state(LevelState::Playing)),
             )
             .add_systems(OnEnter(LevelState::Loading), spawn_level)
-            .add_systems(OnEnter(LevelState::Complete), show_level_complete_message)
+            .add_systems(OnEnter(LevelState::Complete), show_level_complete_menu)
             .add_systems(
                 FixedUpdate,
                 check_load_status.run_if(in_state(LevelState::Loading)),
@@ -39,9 +40,9 @@ pub struct Level;
 #[derive(Component, Clone, Debug, Reflect)]
 #[reflect(Component)]
 pub struct LevelStats {
-    enemies_destroyed: u32,
-    success: Option<bool>,
-    total_enemies: u32,
+    pub enemies_destroyed: u32,
+    pub success: Option<bool>,
+    pub total_enemies: u32,
 }
 
 impl LevelStats {
@@ -123,6 +124,10 @@ fn on_player_destroyed(
     next_state.set(LevelState::Complete);
 }
 
-fn show_level_complete_message(level_stats: Single<&LevelStats>) {
-    info!("{:?}", level_stats.into_inner());
+fn show_level_complete_menu(
+    commands: Commands,
+    asset_server: Res<AssetServer>,
+    level_stats: Single<&LevelStats>,
+) {
+    spawn_level_complete_menu(commands, &asset_server, &level_stats);
 }

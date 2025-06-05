@@ -1,0 +1,16 @@
+@import url("styles/base.css");
+
+/* FIXME: font not working on this screen unless redeclared here. Fix or submit bug? */
+@font-face {
+    font-family: "Geo";
+    src: url("fonts/geo/Geo-Regular.ttf");
+}
+
+.level-complete-dialog {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin: auto;
+    padding: 20px;
+    width: 520px;
+}

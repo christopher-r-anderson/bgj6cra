@@ -11,5 +11,5 @@ impl Plugin for TitleScreenPlugin {
 }
 
 fn spawn_main_menu(commands: Commands, asset_server: Res<AssetServer>) {
-    main_menu::spawn_menu(commands, &asset_server);
+    main_menu::spawn_main_menu(commands, &asset_server);
 }
