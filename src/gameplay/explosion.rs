@@ -23,7 +23,6 @@ impl Plugin for ExplosionPlugin {
         app.register_type::<Explosion>()
             .add_observer(on_enemy_destroyed)
             .add_observer(on_explosion_chain_event)
-            .add_observer(on_explosion_collision)
             .add_systems(
                 FixedUpdate,
                 (tick_explosion_chain, update_explosion).run_if(in_state(LevelState::Playing)),
@@ -91,10 +90,6 @@ fn on_enemy_destroyed(
 
 #[derive(Event, Clone, Debug, Default, Reflect)]
 pub struct ExplosionCollisionEvent {}
-
-fn on_explosion_collision(trigger: Trigger<ExplosionCollisionEvent>, mut commands: Commands) {
-    commands.entity(trigger.target()).despawn();
-}
 
 #[derive(Event, Clone, Debug, Reflect)]
 pub struct ExplosionChainEvent {
