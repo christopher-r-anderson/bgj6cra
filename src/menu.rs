@@ -92,21 +92,21 @@ impl DirectionalNavigationAction {
         ]
     }
 
-    fn keycode(&self) -> KeyCode {
+    fn keycodes(&self) -> Vec<KeyCode> {
         match self {
-            DirectionalNavigationAction::Up => KeyCode::ArrowUp,
-            DirectionalNavigationAction::Down => KeyCode::ArrowDown,
-            DirectionalNavigationAction::Select => KeyCode::Enter,
+            DirectionalNavigationAction::Up => vec![KeyCode::ArrowUp],
+            DirectionalNavigationAction::Down => vec![KeyCode::ArrowDown],
+            DirectionalNavigationAction::Select => vec![KeyCode::Enter, KeyCode::Space],
         }
     }
 
-    fn gamepad_button(&self) -> GamepadButton {
+    fn gamepad_buttons(&self) -> Vec<GamepadButton> {
         match self {
-            DirectionalNavigationAction::Up => GamepadButton::DPadUp,
-            DirectionalNavigationAction::Down => GamepadButton::DPadDown,
+            DirectionalNavigationAction::Up => vec![GamepadButton::DPadUp],
+            DirectionalNavigationAction::Down => vec![GamepadButton::DPadDown],
             // This is the "A" button on an Xbox controller,
             // and is conventionally used as the "Select" / "Interact" button in many games
-            DirectionalNavigationAction::Select => GamepadButton::South,
+            DirectionalNavigationAction::Select => vec![GamepadButton::South, GamepadButton::Start],
         }
     }
 }
@@ -129,7 +129,7 @@ fn process_inputs(
     for action in DirectionalNavigationAction::variants() {
         // Use just_pressed to ensure that we only process each action once
         // for each time it is pressed
-        if keyboard_input.just_pressed(action.keycode()) {
+        if keyboard_input.any_just_pressed(action.keycodes()) {
             action_state.pressed_actions.insert(action);
         }
     }
@@ -139,7 +139,7 @@ fn process_inputs(
     for gamepad in gamepad_input.iter() {
         for action in DirectionalNavigationAction::variants() {
             // Unlike keyboard input, gamepads are bound to a specific controller
-            if gamepad.just_pressed(action.gamepad_button()) {
+            if gamepad.any_just_pressed(action.gamepad_buttons()) {
                 action_state.pressed_actions.insert(action);
             }
         }
