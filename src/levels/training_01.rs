@@ -13,7 +13,7 @@ pub fn get_config(asset_server: &AssetServer) -> LevelConfig {
         enemies: vec![EnemyBundle::new(
             asset_server,
             EnemyTeam::Alien,
-            EnemyClass::EnemyBase,
+            EnemyClass::Base,
             vec2(0., 330.),
         )],
     }

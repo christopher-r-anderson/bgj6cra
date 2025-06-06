@@ -33,8 +33,8 @@ pub struct Enemy;
 #[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyClass {
-    Enemy,
-    EnemyBase,
+    Defender,
+    Base,
     Land,
     Projectile,
 }
@@ -42,8 +42,8 @@ pub enum EnemyClass {
 impl std::fmt::Display for EnemyClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EnemyClass::Enemy => write!(f, "Enemy"),
-            EnemyClass::EnemyBase => write!(f, "EnemyBase"),
+            EnemyClass::Defender => write!(f, "Defender"),
+            EnemyClass::Base => write!(f, "Base"),
             EnemyClass::Land => write!(f, "Land"),
             EnemyClass::Projectile => write!(f, "Projectile"),
         }
@@ -96,7 +96,7 @@ impl EnemyBundle {
         position: Vec2,
     ) -> Self {
         match class {
-            EnemyClass::EnemyBase => Self {
+            EnemyClass::Base => Self {
                 enemy: Enemy,
                 name: Name::new(format!("{team} {class}")),
                 team,
@@ -132,7 +132,7 @@ impl EnemyBundle {
                 collider: Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
                 collision_events_enabled: CollisionEventsEnabled,
                 collision_layers: CollisionLayers::new(
-                    CollisionLayer::Enemy,
+                    CollisionLayer::EnemyDefender,
                     [CollisionLayer::PlayerProjectile],
                 ),
                 state_scoped: StateScoped(AppState::Gameplay),

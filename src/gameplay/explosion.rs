@@ -49,7 +49,7 @@ fn on_enemy_destroyed(
     } = trigger.event();
 
     let (collider, scene) = match class {
-        EnemyClass::EnemyBase => (
+        EnemyClass::Base => (
             Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-base-explosion.glb")),
@@ -105,8 +105,8 @@ pub struct ExplosionChain {
 impl ExplosionChain {
     pub fn following_stage(stage: &EnemyClass) -> Option<EnemyClass> {
         match stage {
-            EnemyClass::EnemyBase => Some(EnemyClass::Enemy),
-            EnemyClass::Enemy => Some(EnemyClass::Land),
+            EnemyClass::Base => Some(EnemyClass::Defender),
+            EnemyClass::Defender => Some(EnemyClass::Land),
             EnemyClass::Land => Some(EnemyClass::Projectile),
             EnemyClass::Projectile => None,
         }
@@ -195,7 +195,7 @@ fn update_explosion(
         } else {
             transform.scale = Vec3::splat(1. + 2. * explosion_lifecycle.0.fraction());
             *collider = match class {
-                EnemyClass::EnemyBase => Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
+                EnemyClass::Base => Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
                 /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
                 _ => Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
             };
