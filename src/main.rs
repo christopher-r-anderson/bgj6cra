@@ -7,7 +7,8 @@ use maxx_obliterate::{
     app_state::AppStatePlugin,
     gameplay::{
         collisions::CollisionPlugin, enemy::EnemyPlugin, energy::EnergyPlugin,
-        explosion::ExplosionPlugin, level::LevelPlugin, player::PlayerPlugin, stage::StagePlugin,
+        explosion::ExplosionPlugin, game_run::GameRunPlugin, level::LevelPlugin,
+        player::PlayerPlugin, stage::StagePlugin,
     },
     menu::MenuPlugin,
     screen::ScreenPlugin,
@@ -53,6 +54,7 @@ impl Plugin for AppPlugin {
             EnemyPlugin,
             EnergyPlugin,
             ExplosionPlugin,
+            GameRunPlugin,
             LevelPlugin,
             MenuPlugin,
             PlayerPlugin,

@@ -2,13 +2,15 @@ use bevy::prelude::*;
 
 use crate::{
     gameplay::level::LevelConfig,
-    levels::{training_01, training_02, training_03},
+    levels::{game_01, training_01, training_02, training_03},
 };
 
 pub struct GameRunPlugin;
 
 impl Plugin for GameRunPlugin {
-    fn build(&self, _app: &mut App) {}
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SelectedGameRunMode>();
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -19,19 +21,34 @@ pub enum LevelStatus {
     Completed,
 }
 
+#[derive(Resource, Debug, Default)]
+pub enum SelectedGameRunMode {
+    #[default]
+    None,
+    Training,
+    Game,
+}
+
 #[derive(Component, Clone, Debug)]
 pub struct GameRun {
     index: usize,
-    level_statuses: [LevelStatus; 3],
-    levels: [fn(&AssetServer) -> LevelConfig; 3],
+    level_statuses: Vec<LevelStatus>,
+    levels: Vec<fn(&AssetServer) -> LevelConfig>,
 }
 
 impl GameRun {
+    pub fn new_game() -> Self {
+        Self {
+            index: 0,
+            level_statuses: vec![LevelStatus::default(); 1],
+            levels: vec![game_01::get_config],
+        }
+    }
     pub fn new_training() -> Self {
         Self {
             index: 0,
-            level_statuses: [LevelStatus::default(); 3],
-            levels: [
+            level_statuses: vec![LevelStatus::default(); 3],
+            levels: vec![
                 training_01::get_config,
                 training_02::get_config,
                 training_03::get_config,
