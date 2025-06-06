@@ -2,7 +2,10 @@ use bevy::prelude::*;
 
 use crate::{
     gameplay::level::LevelConfig,
-    levels::{game_01, game_02, training_01, training_02, training_03},
+    levels::{
+        game::{game_01, game_02},
+        training::{training_01, training_02, training_03},
+    },
 };
 
 pub struct GameRunPlugin;
