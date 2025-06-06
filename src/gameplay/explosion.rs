@@ -73,7 +73,7 @@ fn on_enemy_destroyed(
         Explosion,
         AttackPoints(1),
         class.clone(),
-        ExplosionLifecycle(Timer::from_seconds(2., TimerMode::Once)),
+        ExplosionLifecycle(Timer::from_seconds(1., TimerMode::Once)),
         Name::new("EnemyExplosion"),
         SceneRoot(scene),
         SourceScale(*scale),
@@ -209,7 +209,7 @@ fn update_explosion(
             };
             let pixel_in_scale = 1. / mesh_size;
             transform.scale = (source_scale.0
-                + (pixel_in_scale * 30. * explosion_lifecycle.0.fraction()))
+                + (pixel_in_scale * 100. * explosion_lifecycle.0.fraction()))
             .extend(1.);
         }
     }
