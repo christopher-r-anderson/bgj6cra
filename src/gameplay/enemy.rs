@@ -10,8 +10,9 @@ use crate::{
     },
 };
 
-pub const ENEMY_SIZE: Vec2 = Vec2::new(28., 28.);
 pub const ENEMY_BASE_SIZE: Vec2 = Vec2::new(80., 30.);
+pub const ENEMY_DEFENDER_SIZE: Vec2 = Vec2::new(28., 28.);
+pub const ENEMY_LAND_SIZE: Vec2 = Vec2::new(1., 1.);
 
 pub struct EnemyPlugin;
 
@@ -33,19 +34,20 @@ pub struct Enemy;
 #[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyClass {
-    Defender,
     Base,
+    Defender,
     Land,
-    Projectile,
+    // Projectile,
 }
 
 impl std::fmt::Display for EnemyClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EnemyClass::Defender => write!(f, "Defender"),
             EnemyClass::Base => write!(f, "Base"),
+            EnemyClass::Defender => write!(f, "Defender"),
             EnemyClass::Land => write!(f, "Land"),
-            EnemyClass::Projectile => write!(f, "Projectile"),
+            // TODO: Add projectiles (and probably Attacker?)
+            // EnemyClass::Projectile => write!(f, "Projectile"),
         }
     }
 }
@@ -89,54 +91,65 @@ pub struct EnemyBundle {
 }
 
 impl EnemyBundle {
-    pub fn new(
-        asset_server: &AssetServer,
-        team: EnemyTeam,
-        class: EnemyClass,
-        position: Vec2,
-    ) -> Self {
-        match class {
-            EnemyClass::Base => Self {
-                enemy: Enemy,
-                name: Name::new(format!("{team} {class}")),
-                team,
-                class,
-                scene: SceneRoot(
-                    asset_server
-                        .load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
-                ),
-                hp: HitPoints(3),
-                transform: Transform::from_xyz(position.x, position.y, 2.),
-                rigid_body: RigidBody::Static,
-                collider: Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
-                collision_events_enabled: CollisionEventsEnabled,
-                collision_layers: CollisionLayers::new(
-                    CollisionLayer::EnemyBase,
-                    [CollisionLayer::PlayerProjectile],
-                ),
-                state_scoped: StateScoped(AppState::Gameplay),
-            },
-
-            /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
-            _ => Self {
-                enemy: Enemy,
-                name: Name::new(format!("{team} {class}")),
-                team,
-                class,
-                scene: SceneRoot(
-                    asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
-                ),
-                hp: HitPoints(1),
-                transform: Transform::from_xyz(position.x, position.y, 3.),
-                rigid_body: RigidBody::Static,
-                collider: Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
-                collision_events_enabled: CollisionEventsEnabled,
-                collision_layers: CollisionLayers::new(
-                    CollisionLayer::EnemyDefender,
-                    [CollisionLayer::PlayerProjectile],
-                ),
-                state_scoped: StateScoped(AppState::Gameplay),
-            },
+    pub fn new_base(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self {
+            enemy: Enemy,
+            name: Name::new("Alien Base"),
+            team: EnemyTeam::Alien,
+            class: EnemyClass::Base,
+            scene: SceneRoot(
+                asset_server
+                    .load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
+            ),
+            hp: HitPoints(3),
+            transform: Transform::from_xyz(position.x, position.y, 2.),
+            rigid_body: RigidBody::Static,
+            collider: Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
+            collision_events_enabled: CollisionEventsEnabled,
+            collision_layers: CollisionLayers::new(
+                CollisionLayer::EnemyBase,
+                [CollisionLayer::PlayerProjectile],
+            ),
+            state_scoped: StateScoped(AppState::Gameplay),
+        }
+    }
+    pub fn new_defender(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self {
+            enemy: Enemy,
+            name: Name::new("Alien Defender"),
+            team: EnemyTeam::Alien,
+            class: EnemyClass::Defender,
+            scene: SceneRoot(
+                asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
+            ),
+            hp: HitPoints(1),
+            transform: Transform::from_xyz(position.x, position.y, 3.),
+            rigid_body: RigidBody::Static,
+            collider: Collider::rectangle(ENEMY_DEFENDER_SIZE.x, ENEMY_DEFENDER_SIZE.y),
+            collision_events_enabled: CollisionEventsEnabled,
+            collision_layers: CollisionLayers::new(
+                CollisionLayer::EnemyDefender,
+                [CollisionLayer::PlayerProjectile],
+            ),
+            state_scoped: StateScoped(AppState::Gameplay),
+        }
+    }
+    pub fn new_land(asset_server: &AssetServer, position: Vec2, scale: Vec2) -> Self {
+        Self {
+            enemy: Enemy,
+            name: Name::new("Alien Land"),
+            team: EnemyTeam::Alien,
+            class: EnemyClass::Land,
+            scene: SceneRoot(
+                asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-land.glb")),
+            ),
+            hp: HitPoints(1),
+            transform: Transform::from_xyz(position.x, position.y, 1.).with_scale(scale.extend(1.)),
+            rigid_body: RigidBody::Static,
+            collider: Collider::rectangle(ENEMY_LAND_SIZE.x, ENEMY_LAND_SIZE.y),
+            collision_events_enabled: CollisionEventsEnabled,
+            collision_layers: CollisionLayers::NONE,
+            state_scoped: StateScoped(AppState::Gameplay),
         }
     }
 }
@@ -174,6 +187,7 @@ fn on_enemy_collision(
                 class: class.clone(),
                 destruction_source: EnemyDestructionSource::Player,
                 position: transform.translation.truncate(),
+                scale: transform.scale.truncate(),
                 team: team.clone(),
             },
             trigger.target(),
@@ -192,6 +206,7 @@ pub struct EnemyDestroyedEvent {
     pub class: EnemyClass,
     pub destruction_source: EnemyDestructionSource,
     pub position: Vec2,
+    pub scale: Vec2,
     pub team: EnemyTeam,
 }
 
@@ -207,6 +222,7 @@ fn spawn_chain_when_destroyed_by_player(
         class,
         destruction_source,
         position: _,
+        scale: _,
         team,
     } = trigger.event();
     if destruction_source == &EnemyDestructionSource::Player {

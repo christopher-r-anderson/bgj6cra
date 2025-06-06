@@ -28,9 +28,10 @@ impl Plugin for CollisionPlugin {
 pub enum CollisionLayer {
     #[default]
     Default,
-    EnemyDefender,
     EnemyBase,
+    EnemyDefender,
     EnemyExplosion,
+    EnemyLand,
     Player,
     PlayerProjectile,
 }

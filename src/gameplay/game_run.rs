@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     gameplay::level::LevelConfig,
-    levels::{training_01, training_02},
+    levels::{training_01, training_02, training_03},
 };
 
 pub struct GameRunPlugin;
@@ -22,16 +22,20 @@ pub enum LevelStatus {
 #[derive(Component, Clone, Debug)]
 pub struct GameRun {
     index: usize,
-    level_statuses: [LevelStatus; 2],
-    levels: [fn(&AssetServer) -> LevelConfig; 2],
+    level_statuses: [LevelStatus; 3],
+    levels: [fn(&AssetServer) -> LevelConfig; 3],
 }
 
 impl GameRun {
     pub fn new_training() -> Self {
         Self {
             index: 0,
-            level_statuses: [LevelStatus::default(); 2],
-            levels: [training_01::get_config, training_02::get_config],
+            level_statuses: [LevelStatus::default(); 3],
+            levels: [
+                training_01::get_config,
+                training_02::get_config,
+                training_03::get_config,
+            ],
         }
     }
     pub fn advance_current_level(&mut self) -> Result<(), String> {

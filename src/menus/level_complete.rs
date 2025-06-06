@@ -59,18 +59,9 @@ pub fn spawn_level_complete_menu(
             Node::default(),
             ClassList::new_with_classes(["level-complete-dialog"]),
             children![
-                (
-                    Text::new(heading),
-                    ClassList::new_with_classes(["dialog-heading"])
-                ),
-                (
-                    Text::new(text),
-                    ClassList::new_with_classes(["dialog-text"])
-                ),
-                (
-                    Text::new(stats),
-                    ClassList::new_with_classes(["dialog-text"])
-                ),
+                (Text::new(heading), ClassList::new_with_classes(["heading"])),
+                (Text::new(text), ClassList::new_with_classes(["text"])),
+                (Text::new(stats), ClassList::new_with_classes(["text"])),
                 (
                     Name::new("Level Complete Dialog Menu"),
                     Node::default(),
@@ -122,7 +113,19 @@ fn level_complete_success_menu(_level_stats: &LevelStats, has_more_levels: bool)
                         next_state.set(AppState::ResetGameplay);
                     },
                 );
+                spawner.spawn(button("Main Menu")).observe(
+                    |_trigger: Trigger<ButtonActivate>,
+                     mut next_state: ResMut<NextState<AppState>>| {
+                        next_state.set(AppState::Title);
+                    },
+                );
             } else {
+                spawner.spawn(button("Main Menu")).observe(
+                    |_trigger: Trigger<ButtonActivate>,
+                     mut next_state: ResMut<NextState<AppState>>| {
+                        next_state.set(AppState::Title);
+                    },
+                );
                 spawner.spawn((button("Replay Level"), AutoFocus)).observe(
                     |_trigger: Trigger<ButtonActivate>,
                      mut next_state: ResMut<NextState<AppState>>| {
@@ -130,11 +133,6 @@ fn level_complete_success_menu(_level_stats: &LevelStats, has_more_levels: bool)
                     },
                 );
             }
-            spawner.spawn(button("Main Menu")).observe(
-                |_trigger: Trigger<ButtonActivate>, mut next_state: ResMut<NextState<AppState>>| {
-                    next_state.set(AppState::Title);
-                },
-            );
         })),
     )
 }

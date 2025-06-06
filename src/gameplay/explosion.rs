@@ -6,8 +6,8 @@ use bevy::prelude::*;
 use crate::gameplay::{
     collisions::CollisionLayer,
     enemy::{
-        ENEMY_BASE_SIZE, ENEMY_SIZE, Enemy, EnemyClass, EnemyDestroyedEvent,
-        EnemyDestructionSource, EnemyTeam,
+        ENEMY_BASE_SIZE, ENEMY_DEFENDER_SIZE, ENEMY_LAND_SIZE, Enemy, EnemyClass,
+        EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam,
     },
     energy::AttackPoints,
     level::LevelState,
@@ -36,15 +36,19 @@ pub struct Explosion;
 #[reflect(Component)]
 struct ExplosionLifecycle(Timer);
 
+#[derive(Component, Debug, Clone)]
+struct SourceScale(Vec2);
+
 fn on_enemy_destroyed(
     trigger: Trigger<EnemyDestroyedEvent>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
     let EnemyDestroyedEvent {
-        position,
-        destruction_source: _,
         class,
+        destruction_source: _,
+        position,
+        scale,
         team: _,
     } = trigger.event();
 
@@ -54,11 +58,15 @@ fn on_enemy_destroyed(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-base-explosion.glb")),
         ),
-        /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
-        _ => (
-            Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
+        EnemyClass::Defender => (
+            Collider::rectangle(ENEMY_DEFENDER_SIZE.x, ENEMY_DEFENDER_SIZE.y),
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-explosion.glb")),
+        ),
+        EnemyClass::Land => (
+            Collider::rectangle(ENEMY_LAND_SIZE.x, ENEMY_LAND_SIZE.y),
+            asset_server
+                .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-land-explosion.glb")),
         ),
     };
     commands.spawn((
@@ -68,6 +76,7 @@ fn on_enemy_destroyed(
         ExplosionLifecycle(Timer::from_seconds(2., TimerMode::Once)),
         Name::new("EnemyExplosion"),
         SceneRoot(scene),
+        SourceScale(*scale),
         Transform::from_translation(position.extend(5.)),
         RigidBody::Dynamic,
         collider,
@@ -107,8 +116,9 @@ impl ExplosionChain {
         match stage {
             EnemyClass::Base => Some(EnemyClass::Defender),
             EnemyClass::Defender => Some(EnemyClass::Land),
-            EnemyClass::Land => Some(EnemyClass::Projectile),
-            EnemyClass::Projectile => None,
+            // EnemyClass::Land => Some(EnemyClass::Projectile),
+            // EnemyClass::Projectile => None,
+            EnemyClass::Land => None,
         }
     }
     pub fn new(team: EnemyTeam, stage: EnemyClass) -> Self {
@@ -119,9 +129,7 @@ impl ExplosionChain {
         }
     }
     pub fn is_complete(&self) -> bool {
-        self.stage
-            .as_ref()
-            .is_none_or(|stage| Self::following_stage(stage).is_none())
+        self.stage.as_ref().is_none()
     }
     pub fn tick(&mut self, delta: Duration) -> Option<ExplosionChainEvent> {
         if let Some(stage) = &self.stage {
@@ -166,6 +174,7 @@ fn on_explosion_chain_event(
                     class: class.clone(),
                     destruction_source: EnemyDestructionSource::ExplosionChain,
                     position: transform.translation.truncate(),
+                    scale: transform.scale.truncate(),
                     team: team.clone(),
                 },
                 entity,
@@ -182,23 +191,26 @@ fn update_explosion(
             Entity,
             &mut ExplosionLifecycle,
             &mut Transform,
-            &mut Collider,
+            &SourceScale,
             &EnemyClass,
         ),
         With<Explosion>,
     >,
 ) {
-    for (entity, mut explosion_lifecycle, mut transform, mut collider, class) in &mut explosions_q {
+    for (entity, mut explosion_lifecycle, mut transform, source_scale, class) in &mut explosions_q {
         explosion_lifecycle.0.tick(time.delta());
         if explosion_lifecycle.0.just_finished() {
             commands.entity(entity).despawn();
         } else {
-            transform.scale = Vec3::splat(1. + 2. * explosion_lifecycle.0.fraction());
-            *collider = match class {
-                EnemyClass::Base => Collider::rectangle(ENEMY_BASE_SIZE.x, ENEMY_BASE_SIZE.y),
-                /* TODO: use this for EnemyClass::Enemy and handle the rest directly once they are created */
-                _ => Collider::rectangle(ENEMY_SIZE.x, ENEMY_SIZE.y),
+            let mesh_size = match class {
+                EnemyClass::Base => ENEMY_BASE_SIZE,
+                EnemyClass::Defender => ENEMY_DEFENDER_SIZE,
+                EnemyClass::Land => ENEMY_LAND_SIZE,
             };
+            let pixel_in_scale = 1. / mesh_size;
+            transform.scale = (source_scale.0
+                + (pixel_in_scale * 30. * explosion_lifecycle.0.fraction()))
+            .extend(1.);
         }
     }
 }

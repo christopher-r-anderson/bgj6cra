@@ -219,7 +219,7 @@ fn on_player_projectile_collision(
 
 fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<Playing>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
-
+    // TODO: adjust for when not playing
     actions
         .bind::<Move>()
         .to((
