@@ -27,6 +27,8 @@ impl Plugin for PlayerPlugin {
             .add_observer(on_player_projectile_collision)
             .add_observer(on_player_collision)
             .add_observer(on_player_destroyed)
+            .add_systems(OnEnter(LevelState::Playing), add_input_context)
+            .add_systems(OnExit(LevelState::Playing), remove_input_context)
             .add_systems(
                 Update,
                 fire_player_projectile.run_if(in_state(LevelState::Playing)),
@@ -40,7 +42,6 @@ pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle 
         Name::new("Player"),
         Speed(200.),
         HitPoints(1),
-        Actions::<Playing>::default(),
         AutoFire::new(0.2, false /* TODO: is_firing_active? */),
         SceneRoot(
             asset_server.load(GltfAssetLabel::Scene(0).from_asset("player-ship/player-ship.glb")),
@@ -233,6 +234,20 @@ fn binding(trigger: Trigger<Binding<Playing>>, mut players: Query<&mut Actions<P
     actions
         .bind::<Fire>()
         .to((KeyCode::Space, GamepadButton::South));
+}
+
+fn add_input_context(mut commands: Commands, player_q: Query<Entity, With<Player>>) {
+    for player in player_q {
+        commands
+            .entity(player)
+            .insert(Actions::<Playing>::default());
+    }
+}
+
+fn remove_input_context(mut commands: Commands, player_q: Query<Entity, With<Player>>) {
+    for player in player_q {
+        commands.entity(player).remove::<Actions<Playing>>();
+    }
 }
 
 fn apply_movement(
