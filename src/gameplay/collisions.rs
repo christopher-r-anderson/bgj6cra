@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::gameplay::{
-    enemy::{EnemyClass, EnemyCollisionEvent, EnemyTeam},
+    enemy::{Enemy, EnemyClass, EnemyCollisionEvent, EnemyTeam},
     energy::AttackPoints,
     explosion::{Explosion, ExplosionCollisionEvent},
     level::LevelState,
@@ -16,6 +16,7 @@ impl Plugin for CollisionPlugin {
         app.add_systems(
             Update,
             (
+                handle_enemy_collisions,
                 handle_explosion_collisions,
                 handle_player_projectile_collisions,
             )
@@ -102,5 +103,24 @@ fn handle_explosion_collisions(
         };
         commands.trigger_targets(PlayerCollisionEvent::new(ap), player);
         commands.trigger_targets(ExplosionCollisionEvent::default(), explosion);
+    }
+}
+
+fn handle_enemy_collisions(
+    mut collision_event_reader: EventReader<CollisionStarted>,
+    mut commands: Commands,
+    enemy_q: Query<&AttackPoints, With<Enemy>>,
+) {
+    for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
+        info!("Collision started");
+        let (enemy, player, ap) = match (enemy_q.get(*entity1), enemy_q.get(*entity2)) {
+            (Ok(ap), Err(_)) => (*entity1, *entity2, ap.clone()),
+            (Err(_), Ok(ap)) => (*entity2, *entity1, ap.clone()),
+            _ => {
+                continue;
+            }
+        };
+        commands.trigger_targets(PlayerCollisionEvent::new(ap), player);
+        commands.trigger_targets(ExplosionCollisionEvent::default(), enemy);
     }
 }

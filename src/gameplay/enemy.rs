@@ -90,6 +90,7 @@ pub struct EnemyBundle {
     destruction: EnemyDestruction,
     name: Name,
     scene: SceneRoot,
+    ap: AttackPoints,
     hp: HitPoints,
     transform: Transform,
     rigid_body: RigidBody,
@@ -114,6 +115,7 @@ impl EnemyBundle {
                 asset_server
                     .load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
             ),
+            ap: AttackPoints(1),
             hp: HitPoints(3),
             transform: Transform::from_xyz(position.x, position.y, 2.),
             rigid_body: RigidBody::Static,
@@ -121,7 +123,7 @@ impl EnemyBundle {
             collision_events_enabled: CollisionEventsEnabled,
             collision_layers: CollisionLayers::new(
                 CollisionLayer::EnemyBase,
-                [CollisionLayer::PlayerProjectile],
+                [CollisionLayer::Player, CollisionLayer::PlayerProjectile],
             ),
             state_scoped: StateScoped(AppState::Gameplay),
         }
@@ -136,6 +138,7 @@ impl EnemyBundle {
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
             ),
+            ap: AttackPoints(1),
             hp: HitPoints(1),
             transform: Transform::from_xyz(position.x, position.y, 3.),
             rigid_body: RigidBody::Static,
@@ -143,7 +146,7 @@ impl EnemyBundle {
             collision_events_enabled: CollisionEventsEnabled,
             collision_layers: CollisionLayers::new(
                 CollisionLayer::EnemyDefender,
-                [CollisionLayer::PlayerProjectile],
+                [CollisionLayer::Player, CollisionLayer::PlayerProjectile],
             ),
             state_scoped: StateScoped(AppState::Gameplay),
         }
@@ -158,6 +161,7 @@ impl EnemyBundle {
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-land.glb")),
             ),
+            ap: AttackPoints(1),
             hp: HitPoints(1),
             transform: Transform::from_xyz(position.x, position.y, 1.).with_scale(scale.extend(1.)),
             rigid_body: RigidBody::Static,
@@ -177,6 +181,7 @@ impl EnemyBundle {
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-wall.glb")),
             ),
+            ap: AttackPoints(0),
             hp: HitPoints(0),
             transform: Transform::from_xyz(position.x, position.y, 1.).with_scale(scale.extend(1.)),
             rigid_body: RigidBody::Static,
@@ -184,7 +189,7 @@ impl EnemyBundle {
             collision_events_enabled: CollisionEventsEnabled,
             collision_layers: CollisionLayers::new(
                 CollisionLayer::EnemyWall,
-                [CollisionLayer::PlayerProjectile],
+                [CollisionLayer::Player, CollisionLayer::PlayerProjectile],
             ),
             state_scoped: StateScoped(AppState::Gameplay),
         }

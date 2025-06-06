@@ -64,7 +64,15 @@ pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle 
             vec2(-20.711, -13.904),
         ),
         CollisionEventsEnabled,
-        CollisionLayers::new(CollisionLayer::Player, [CollisionLayer::EnemyExplosion]),
+        CollisionLayers::new(
+            CollisionLayer::Player,
+            [
+                CollisionLayer::EnemyExplosion,
+                CollisionLayer::EnemyBase,
+                CollisionLayer::EnemyDefender,
+                CollisionLayer::EnemyWall,
+            ],
+        ),
         Transform::from_translation(position.extend(20.)),
     )
 }
@@ -320,16 +328,45 @@ fn remove_input_context(mut commands: Commands, player_q: Query<Entity, With<Pla
 
 fn apply_movement(
     trigger: Trigger<Fired<Move>>,
-    mut player_q: Query<(&mut Transform, &Speed), With<Player>>,
+    spatial_query: SpatialQuery,
+    mut player_q: Query<(&mut Transform, &Collider, &Speed), With<Player>>,
 ) {
-    let (mut transform, speed) = player_q.get_mut(trigger.target()).unwrap();
+    let Ok((mut transform, collider, speed)) = player_q.get_mut(trigger.target()) else {
+        warn!("Can't find Player - skipping movement");
+        return;
+    };
+    if trigger.value == Vec2::ZERO {
+        return;
+    }
     let velocity = speed.0 * trigger.value;
     let stage_half_width = STAGE_WIDTH / 2. - PLAYER_SIZE.x / 2.;
     let stage_half_height = STAGE_HEIGHT / 2. - PLAYER_SIZE.y / 2.;
-    transform.translation.x =
-        (transform.translation.x + velocity.x).clamp(-stage_half_width, stage_half_width);
-    transform.translation.y =
-        (transform.translation.y + velocity.y).clamp(-stage_half_height, stage_half_height);
+    let new_x = (transform.translation.x + velocity.x).clamp(-stage_half_width, stage_half_width);
+    let new_y = (transform.translation.y + velocity.y).clamp(-stage_half_height, stage_half_height);
+
+    let config = ShapeCastConfig::from_max_distance(
+        transform
+            .translation
+            .truncate()
+            .distance(vec2(new_x, new_y)),
+    );
+    let filter = SpatialQueryFilter::from_mask(CollisionLayer::EnemyWall);
+    if spatial_query
+        .cast_shape(
+            collider,
+            transform.translation.truncate(),
+            0.,
+            Dir2::try_from(trigger.value)
+                .expect("Value from Move should be normalized and non-zero"),
+            &config,
+            &filter,
+        )
+        .is_some()
+    {
+        return;
+    }
+    transform.translation.x = new_x;
+    transform.translation.y = new_y;
 }
 
 fn start_firing(trigger: Trigger<Started<Fire>>, mut player_q: Query<&mut AutoFire, With<Player>>) {
