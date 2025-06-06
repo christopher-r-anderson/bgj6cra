@@ -179,7 +179,11 @@ fn fire_player_projectile(
                     CollisionEventsEnabled,
                     CollisionLayers::new(
                         CollisionLayer::PlayerProjectile,
-                        [CollisionLayer::EnemyDefender, CollisionLayer::EnemyBase],
+                        [
+                            CollisionLayer::EnemyDefender,
+                            CollisionLayer::EnemyBase,
+                            CollisionLayer::EnemyWall,
+                        ],
                     ),
                     LinearVelocity(vec2(0., 200.)),
                 ));

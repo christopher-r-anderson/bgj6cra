@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     app_state::AppState,
     gameplay::{
-        enemy::{Enemy, EnemyBundle, EnemyDestroyedEvent},
+        enemy::{Enemy, EnemyBundle, EnemyDestroyedEvent, EnemyDestruction},
         explosion::Explosion,
         game_run::{GameRun, LevelStatus},
         player::{PlayerDestroyedEvent, player_bundle},
@@ -90,6 +90,9 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
         LevelStats::new(
             level_config
                 .enemies
+                .iter()
+                .filter(|enemy| enemy.requires_destruction())
+                .collect::<Vec<_>>()
                 .len()
                 .try_into()
                 .expect("There shouldn't be more enemies than u32"),
@@ -115,10 +118,16 @@ fn on_enemy_destroyed(
 fn check_level_complete(
     mut next_state: ResMut<NextState<LevelState>>,
     mut level_stats: Single<&mut LevelStats>,
-    enemies_q: Query<(), With<Enemy>>,
+    enemies_q: Query<&EnemyDestruction, With<Enemy>>,
     explosions_q: Query<(), With<Explosion>>,
 ) {
-    if enemies_q.is_empty() && explosions_q.is_empty() {
+    if enemies_q
+        .iter()
+        .filter(|destruction| destruction == &&EnemyDestruction::Required)
+        .collect::<Vec<_>>()
+        .is_empty()
+        && explosions_q.is_empty()
+    {
         level_stats.success = Some(true);
         next_state.set(LevelState::Complete);
     }

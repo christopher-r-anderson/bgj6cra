@@ -13,6 +13,7 @@ use crate::{
 pub const ENEMY_BASE_SIZE: Vec2 = Vec2::new(80., 30.);
 pub const ENEMY_DEFENDER_SIZE: Vec2 = Vec2::new(28., 28.);
 pub const ENEMY_LAND_SIZE: Vec2 = Vec2::new(1., 1.);
+pub const ENEMY_WALL_SIZE: Vec2 = Vec2::new(1., 1.);
 
 pub struct EnemyPlugin;
 
@@ -37,6 +38,7 @@ pub enum EnemyClass {
     Base,
     Defender,
     Land,
+    Wall,
     // Projectile,
 }
 
@@ -46,6 +48,7 @@ impl std::fmt::Display for EnemyClass {
             EnemyClass::Base => write!(f, "Base"),
             EnemyClass::Defender => write!(f, "Defender"),
             EnemyClass::Land => write!(f, "Land"),
+            EnemyClass::Wall => write!(f, "Wall"),
             // TODO: Add projectiles (and probably Attacker?)
             // EnemyClass::Projectile => write!(f, "Projectile"),
         }
@@ -72,11 +75,19 @@ impl std::fmt::Display for EnemyTeam {
     }
 }
 
+#[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
+#[reflect(Component)]
+pub enum EnemyDestruction {
+    Required,
+    Impossible,
+}
+
 #[derive(Bundle)]
 pub struct EnemyBundle {
     enemy: Enemy,
     class: EnemyClass,
     team: EnemyTeam,
+    destruction: EnemyDestruction,
     name: Name,
     scene: SceneRoot,
     hp: HitPoints,
@@ -97,6 +108,8 @@ impl EnemyBundle {
             name: Name::new("Alien Base"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Base,
+            // TODO: this should be a marker trait for simplicity and querying, but right now everything is an EnemyBundle
+            destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server
                     .load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one-base.glb")),
@@ -119,6 +132,7 @@ impl EnemyBundle {
             name: Name::new("Alien Defender"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Defender,
+            destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
             ),
@@ -140,6 +154,7 @@ impl EnemyBundle {
             name: Name::new("Alien Land"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Land,
+            destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-land.glb")),
             ),
@@ -151,6 +166,31 @@ impl EnemyBundle {
             collision_layers: CollisionLayers::NONE,
             state_scoped: StateScoped(AppState::Gameplay),
         }
+    }
+    pub fn new_wall(asset_server: &AssetServer, position: Vec2, scale: Vec2) -> Self {
+        Self {
+            enemy: Enemy,
+            name: Name::new("Alien Wall"),
+            team: EnemyTeam::Alien,
+            class: EnemyClass::Wall,
+            destruction: EnemyDestruction::Impossible,
+            scene: SceneRoot(
+                asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-wall.glb")),
+            ),
+            hp: HitPoints(0),
+            transform: Transform::from_xyz(position.x, position.y, 1.).with_scale(scale.extend(1.)),
+            rigid_body: RigidBody::Static,
+            collider: Collider::rectangle(ENEMY_WALL_SIZE.x, ENEMY_WALL_SIZE.y),
+            collision_events_enabled: CollisionEventsEnabled,
+            collision_layers: CollisionLayers::new(
+                CollisionLayer::EnemyWall,
+                [CollisionLayer::PlayerProjectile],
+            ),
+            state_scoped: StateScoped(AppState::Gameplay),
+        }
+    }
+    pub fn requires_destruction(&self) -> bool {
+        self.destruction == EnemyDestruction::Required
     }
 }
 

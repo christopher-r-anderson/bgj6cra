@@ -32,6 +32,7 @@ pub enum CollisionLayer {
     EnemyDefender,
     EnemyExplosion,
     EnemyLand,
+    EnemyWall,
     Player,
     PlayerProjectile,
 }
@@ -80,7 +81,9 @@ fn handle_player_projectile_collisions(
                 }
             };
         commands.trigger_targets(PlayerProjectileCollisionEvent::default(), projectile);
-        commands.trigger_targets(enemy_collision_event, hit_target);
+        if enemy_collision_event.class != EnemyClass::Wall {
+            commands.trigger_targets(enemy_collision_event, hit_target);
+        }
     }
 }
 

@@ -4,7 +4,7 @@ use crate::{
     gameplay::level::LevelConfig,
     levels::{
         game::{game_01, game_02, path},
-        training::{training_01, training_02, training_03},
+        training::{training_01, training_02, training_03, wall},
     },
 };
 
@@ -49,6 +49,7 @@ impl GameRun {
     }
     pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
         vec![
+            wall::get_config,
             training_01::get_config,
             training_02::get_config,
             training_03::get_config,

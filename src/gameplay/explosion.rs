@@ -70,6 +70,7 @@ fn on_enemy_destroyed(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-land-explosion.glb")),
         ),
+        EnemyClass::Wall => unreachable!("Walls can't be destroyed"),
     };
     commands.spawn((
         Explosion,
@@ -118,6 +119,8 @@ impl ExplosionChain {
             // EnemyClass::Land => Some(EnemyClass::Projectile),
             // EnemyClass::Projectile => None,
             EnemyClass::Land => None,
+            // TODO: better types so we don't pepper around unreachable! for this
+            EnemyClass::Wall => unreachable!("Enemy Walls can't be destroyed"),
         }
     }
     pub fn new(team: EnemyTeam, stage: EnemyClass) -> Self {
@@ -205,6 +208,7 @@ fn update_explosion(
                 EnemyClass::Base => ENEMY_BASE_SIZE,
                 EnemyClass::Defender => ENEMY_DEFENDER_SIZE,
                 EnemyClass::Land => ENEMY_LAND_SIZE,
+                EnemyClass::Wall => unreachable!("Enemy Walls can't be destroyed"),
             };
             let pixel_in_scale = 1. / mesh_size;
             transform.scale = (source_scale.0
