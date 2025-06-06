@@ -10,8 +10,11 @@ use crate::{
         collisions::CollisionLayer,
         energy::{AttackPoints, HitPoints},
         level::LevelState,
+        stage::{STAGE_HEIGHT, STAGE_WIDTH},
     },
 };
+
+const PLAYER_SIZE: Vec2 = Vec2::new(37.8, 38.6);
 
 pub struct PlayerPlugin;
 
@@ -317,7 +320,12 @@ fn apply_movement(
 ) {
     let (mut transform, speed) = player_q.get_mut(trigger.target()).unwrap();
     let velocity = speed.0 * trigger.value;
-    transform.translation += velocity.extend(0.0);
+    let stage_half_width = STAGE_WIDTH / 2. - PLAYER_SIZE.x / 2.;
+    let stage_half_height = STAGE_HEIGHT / 2. - PLAYER_SIZE.y / 2.;
+    transform.translation.x =
+        (transform.translation.x + velocity.x).clamp(-stage_half_width, stage_half_width);
+    transform.translation.y =
+        (transform.translation.y + velocity.y).clamp(-stage_half_height, stage_half_height);
 }
 
 fn start_firing(trigger: Trigger<Started<Fire>>, mut player_q: Query<&mut AutoFire, With<Player>>) {
