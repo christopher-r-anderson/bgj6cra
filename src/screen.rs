@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::screens::{
     loading_screen::LoadingScreenPlugin, new_game_run::NewGameRunScreenPlugin,
-    title_screen::TitleScreenPlugin,
+    ready_screen::ReadyScreenPlugin, title_screen::TitleScreenPlugin,
 };
 
 pub struct ScreenPlugin;
@@ -12,6 +12,7 @@ impl Plugin for ScreenPlugin {
         app.add_plugins((
             LoadingScreenPlugin,
             NewGameRunScreenPlugin,
+            ReadyScreenPlugin,
             TitleScreenPlugin,
         ));
     }

@@ -95,7 +95,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
 }
 
 fn check_load_status(mut next_state: ResMut<NextState<LevelState>>) {
-    next_state.set(LevelState::Playing);
+    next_state.set(LevelState::Ready);
 }
 
 fn on_enemy_destroyed(

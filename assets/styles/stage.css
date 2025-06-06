@@ -27,3 +27,17 @@
         text-align: right;
     }
 }
+
+.countdown {
+    display: flex;
+    flex-direction: column;
+}
+
+.countdown-label {
+    font-size: 50px;
+}
+
+.countdown-time {
+    color: green;
+    font-size: 75px;
+}
