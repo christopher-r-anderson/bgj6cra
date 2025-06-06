@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::{
@@ -12,12 +14,16 @@ use crate::{
     menus::level_complete::spawn_level_complete_menu,
 };
 
+const LEAD_OUT_TIME_SUCCESS: Duration = Duration::from_secs(1);
+const LEAD_OUT_TIME_FAIL: Duration = Duration::from_secs(3);
+
 pub struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_sub_state::<LevelState>()
             .register_type::<Level>()
+            .init_resource::<LeadOutTimer>()
             .add_observer(on_enemy_destroyed)
             .add_observer(on_player_destroyed)
             .add_systems(
@@ -26,6 +32,10 @@ impl Plugin for LevelPlugin {
             )
             .add_systems(OnEnter(LevelState::Loading), spawn_level)
             .add_systems(OnEnter(LevelState::Complete), on_level_complete)
+            .add_systems(
+                Update,
+                update_lead_out_timer.run_if(in_state(LevelState::Complete)),
+            )
             .add_systems(
                 FixedUpdate,
                 check_load_status.run_if(in_state(LevelState::Loading)),
@@ -126,16 +136,36 @@ fn on_player_destroyed(
     next_state.set(LevelState::Complete);
 }
 
+#[derive(Resource, Debug, Default, Deref, DerefMut)]
+struct LeadOutTimer(Timer);
+
 fn on_level_complete(
-    commands: Commands,
-    asset_server: Res<AssetServer>,
+    mut lead_out_timer: ResMut<LeadOutTimer>,
     level_stats: Single<&LevelStats>,
     mut game_run: Single<&mut GameRun>,
 ) {
-    game_run.set_current_level_status(if level_stats.success == Some(true) {
-        LevelStatus::Completed
+    if level_stats.success == Some(true) {
+        game_run.set_current_level_status(LevelStatus::Completed);
+        lead_out_timer.set_duration(LEAD_OUT_TIME_SUCCESS);
     } else {
-        LevelStatus::Tried
-    });
-    spawn_level_complete_menu(commands, &asset_server, &level_stats, &game_run);
+        game_run.set_current_level_status(LevelStatus::Tried);
+        lead_out_timer.set_duration(LEAD_OUT_TIME_FAIL);
+    }
+    lead_out_timer.reset();
+}
+
+fn update_lead_out_timer(
+    commands: Commands,
+    time: Res<Time>,
+    asset_server: Res<AssetServer>,
+    mut lead_out_timer: ResMut<LeadOutTimer>,
+    level_stats: Single<&LevelStats>,
+    game_run: Single<&mut GameRun>,
+) {
+    if !lead_out_timer.finished() {
+        lead_out_timer.tick(time.delta());
+        if lead_out_timer.just_finished() {
+            spawn_level_complete_menu(commands, &asset_server, &level_stats, &game_run);
+        }
+    }
 }
