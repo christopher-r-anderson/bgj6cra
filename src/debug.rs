@@ -3,7 +3,7 @@ use bevy::{dev_tools::states::log_transitions, prelude::*};
 
 use crate::{app_state::AppState, gameplay::level::LevelState};
 
-const DEBUG_PHYSICS: bool = true;
+const DEBUG_PHYSICS: bool = false;
 const DEBUG_SCREEN_STATE: bool = false;
 const DEBUG_LEVEL_STATE: bool = false;
 
