@@ -51,4 +51,10 @@ impl GameRun {
     pub fn set_current_level_status(&mut self, level_status: LevelStatus) {
         self.level_statuses[self.index] = level_status;
     }
+    pub fn current_level_index(&self) -> usize {
+        self.index
+    }
+    pub fn total_level_count(&self) -> usize {
+        self.levels.len()
+    }
 }

@@ -3,7 +3,7 @@
 :root {
     --overlay-color: rgba(0, 0, 0, 0.8);
     --background-color: rgb(50, 50, 51);
-    --menu-width: 520px;
+    --menu-width: var(--stage-width);
 
     --heading-text-color: green;
     --heading-font-size: 44px;

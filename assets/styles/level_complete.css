@@ -12,5 +12,5 @@
     text-align: center;
     margin: auto;
     padding: 20px;
-    width: 520px;
+    width: var(--stage-width);
 }

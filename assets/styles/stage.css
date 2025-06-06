@@ -1,0 +1,29 @@
+@import url("styles/base.css");
+
+/* FIXME: font not working on this screen unless redeclared here. Fix or submit bug? */
+@font-face {
+    font-family: "Geo";
+    src: url("fonts/geo/Geo-Regular.ttf");
+}
+
+.level-info-panel {
+    height: 100%;
+    padding: 20px;
+    width: 50%;
+}
+
+.level-info-panel-content {
+    display: flex;
+    flex-direction: column;
+    margin-right: calc(var(--stage-width) / 2);
+    height: 100vh;
+
+    .text {
+        flex-grow: 1;
+    }
+
+    .heading {
+        margin: 0 -20px 12px 0;
+        text-align: right;
+    }
+}

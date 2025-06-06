@@ -7,11 +7,14 @@
     font-family: "Geo";
     width: 100%;
     height: 100%;
+}
 
-    --dialog-heading-font-size: 60px;
-    --dialog-heading-text-color: green;
-
-    --dialog-text-font-size: 36px;
+:root {
+    /* match STAGE_WIDTH */
+    --stage-width: 520px;
+    --heading-font-size: 60px;
+    --heading-text-color: green;
+    --text-font-size: 36px;
 
     --menu-button-background-color: #ccc;
     --menu-button-font-size: 30px;
@@ -32,14 +35,14 @@
     background-color: rgba(0, 0, 0, 0.8);
 }
 
-.dialog-heading {
-    font-size: var(--dialog-heading-font-size);
-    color: var(--dialog-heading-text-color);
+.heading {
+    font-size: var(--heading-font-size);
+    color: var(--heading-text-color);
     margin-bottom: 40px;
 }
 
-.dialog-text {
-    font-size: var(--dialog-text-font-size);
+.text {
+    font-size: var(--text-font-size);
 }
 
 .dialog-menu {

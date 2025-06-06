@@ -7,7 +7,7 @@ use crate::{
         explosion::Explosion,
         game_run::{GameRun, LevelStatus},
         player::{PlayerDestroyedEvent, player_bundle},
-        stage::spawn_stage,
+        stage::{spawn_level_info_panel, spawn_stage},
     },
     menus::level_complete::spawn_level_complete_menu,
 };
@@ -56,8 +56,10 @@ impl LevelStats {
 }
 
 pub struct LevelConfig {
-    pub start_position: Vec2,
     pub enemies: Vec<EnemyBundle>,
+    pub name: &'static str,
+    pub notes: &'static str,
+    pub start_position: Vec2,
 }
 
 #[derive(SubStates, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -83,12 +85,13 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
                 .expect("There shouldn't be more enemies than u32"),
         ),
     ));
-    commands.spawn_batch(level_config.enemies);
+    spawn_level_info_panel(&mut commands, &asset_server, &level_config, &game_run);
+    spawn_stage(&mut commands, &asset_server);
     commands.spawn((
         StateScoped(AppState::Gameplay),
         player_bundle(&asset_server, level_config.start_position),
     ));
-    spawn_stage(commands, &asset_server);
+    commands.spawn_batch(level_config.enemies);
 }
 
 fn check_load_status(mut next_state: ResMut<NextState<LevelState>>) {
