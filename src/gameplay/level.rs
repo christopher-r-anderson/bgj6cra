@@ -102,7 +102,6 @@ fn on_enemy_destroyed(
     _trigger: Trigger<EnemyDestroyedEvent>,
     mut level_stats: Single<&mut LevelStats>,
 ) {
-    // FIXME: count is x2, possibly because of duplicate destroyed events. check collisions and chain.
     level_stats.enemies_destroyed += 1;
 }
 
