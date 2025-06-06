@@ -37,7 +37,7 @@ impl Plugin for PlayerPlugin {
                 update_player_explosion.run_if(any_with_component::<PlayerExplosion>),
             )
             .add_systems(
-                Update,
+                FixedUpdate,
                 fire_player_projectile.run_if(in_state(LevelState::Playing)),
             );
     }
