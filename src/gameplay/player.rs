@@ -65,7 +65,7 @@ pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle 
         ),
         CollisionEventsEnabled,
         CollisionLayers::new(CollisionLayer::Player, [CollisionLayer::EnemyExplosion]),
-        Transform::from_translation(position.extend(10.)),
+        Transform::from_translation(position.extend(20.)),
     )
 }
 
@@ -172,7 +172,7 @@ fn fire_player_projectile(
                     )),
                     Transform::from_translation(
                         player_transform.translation.xy().extend(0.)
-                            + weapon_transform.translation.xy().extend(0.),
+                            + weapon_transform.translation.xy().extend(24.),
                     ),
                     RigidBody::Dynamic,
                     Collider::circle(4. as Scalar),
