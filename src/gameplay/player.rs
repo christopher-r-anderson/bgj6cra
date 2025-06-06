@@ -4,10 +4,13 @@ use avian2d::{math::*, prelude::*};
 use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_enhanced_input::prelude::*;
 
-use crate::gameplay::{
-    collisions::CollisionLayer,
-    energy::{AttackPoints, HitPoints},
-    level::LevelState,
+use crate::{
+    app_state::AppState,
+    gameplay::{
+        collisions::CollisionLayer,
+        energy::{AttackPoints, HitPoints},
+        level::LevelState,
+    },
 };
 
 pub struct PlayerPlugin;
@@ -31,6 +34,10 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnExit(LevelState::Playing), remove_input_context)
             .add_systems(
                 Update,
+                update_player_explosion.run_if(any_with_component::<PlayerExplosion>),
+            )
+            .add_systems(
+                Update,
                 fire_player_projectile.run_if(in_state(LevelState::Playing)),
             );
     }
@@ -40,6 +47,7 @@ pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle 
     (
         Player,
         Name::new("Player"),
+        StateScoped(AppState::Gameplay),
         Speed(200.),
         HitPoints(1),
         AutoFire::new(0.2, false /* TODO: is_firing_active? */),
@@ -153,6 +161,8 @@ fn fire_player_projectile(
 
                 commands.spawn((
                     PlayerProjectile,
+                    Name::new("Player Projectile"),
+                    StateScoped(AppState::Gameplay),
                     AttackPoints(1),
                     SceneRoot(asset_server.load(
                         GltfAssetLabel::Scene(0).from_asset("projectiles/player-projectile.glb"),
@@ -201,11 +211,63 @@ fn on_player_collision(
     }
 }
 
+#[derive(Component, Debug, Deref, DerefMut)]
+struct PlayerExplosionTimer(Timer);
+
+impl Default for PlayerExplosionTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(2., TimerMode::Once))
+    }
+}
+
+#[derive(Component, Debug)]
+struct PlayerExplosion;
+
 #[derive(Event, Clone, Debug, Default, Reflect)]
 pub struct PlayerDestroyedEvent {}
 
-fn on_player_destroyed(trigger: Trigger<PlayerDestroyedEvent>, mut commands: Commands) {
-    commands.entity(trigger.target()).despawn();
+fn on_player_destroyed(
+    trigger: Trigger<PlayerDestroyedEvent>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    player_q: Query<&Transform, With<Player>>,
+) {
+    if let Ok(transform) = player_q.get(trigger.target()) {
+        commands.entity(trigger.target()).despawn();
+        commands.spawn((
+            PlayerExplosion,
+            Name::new("Player Explosion"),
+            StateScoped(AppState::Gameplay),
+            PlayerExplosionTimer::default(),
+            SceneRoot(asset_server.load(
+                GltfAssetLabel::Scene(0).from_asset("player-explosion/player-explosion.glb"),
+            )),
+            Transform::from_translation(transform.translation.truncate().extend(10.)),
+        ));
+    } else {
+        warn!("Could not find just destroyed Player");
+        // TODO: advance anyways
+    }
+}
+
+fn update_player_explosion(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut player_explosion_q: Query<
+        (Entity, &mut Transform, &mut PlayerExplosionTimer),
+        With<PlayerExplosion>,
+    >,
+) {
+    for (entity, mut transform, mut explosion_timer) in &mut player_explosion_q {
+        explosion_timer.tick(time.delta());
+        if explosion_timer.just_finished() {
+            commands.entity(entity).despawn();
+        } else {
+            let scale = 1. + 30. * explosion_timer.fraction();
+            transform.scale.x = scale;
+            transform.scale.y = scale;
+        }
+    }
 }
 
 #[derive(Event, Clone, Debug, Default, Reflect)]

@@ -97,10 +97,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
     ));
     spawn_level_info_panel(&mut commands, &asset_server, &level_config, &game_run);
     spawn_stage(&mut commands, &asset_server);
-    commands.spawn((
-        StateScoped(AppState::Gameplay),
-        player_bundle(&asset_server, level_config.start_position),
-    ));
+    commands.spawn(player_bundle(&asset_server, level_config.start_position));
     commands.spawn_batch(level_config.enemies);
 }
 
