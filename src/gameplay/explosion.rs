@@ -3,14 +3,17 @@ use std::time::Duration;
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::gameplay::{
-    collisions::CollisionLayer,
-    enemy::{
-        ENEMY_BASE_SIZE, ENEMY_DEFENDER_SIZE, ENEMY_LAND_SIZE, Enemy, EnemyClass,
-        EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam,
+use crate::{
+    app_state::AppState,
+    gameplay::{
+        collisions::CollisionLayer,
+        enemy::{
+            ENEMY_BASE_SIZE, ENEMY_DEFENDER_SIZE, ENEMY_LAND_SIZE, Enemy, EnemyClass,
+            EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam,
+        },
+        energy::AttackPoints,
+        level::LevelState,
     },
-    energy::AttackPoints,
-    level::LevelState,
 };
 
 pub struct ExplosionPlugin;
@@ -71,6 +74,7 @@ fn on_enemy_destroyed(
     };
     commands.spawn((
         Explosion,
+        StateScoped(AppState::Gameplay),
         AttackPoints(1),
         class.clone(),
         ExplosionLifecycle(Timer::from_seconds(1., TimerMode::Once)),

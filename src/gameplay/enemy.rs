@@ -227,7 +227,10 @@ fn spawn_chain_when_destroyed_by_player(
     } = trigger.event();
     if destruction_source == &EnemyDestructionSource::Player {
         if let Some(next_stage) = ExplosionChain::following_stage(class) {
-            commands.spawn(ExplosionChain::new(team.clone(), next_stage));
+            commands.spawn((
+                StateScoped(AppState::Gameplay),
+                ExplosionChain::new(team.clone(), next_stage),
+            ));
         }
     }
 }
