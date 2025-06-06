@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     app_state::AppState,
-    gameplay::game_run::{GameRun, SelectedGameRunMode},
+    gameplay::game_run::{GameRun, GameRunMode, SelectedGameRunMode},
+    menus::level_select_menu::spawn_level_select_menu,
 };
 
 pub struct NewGameRunScreenPlugin;
@@ -15,6 +16,7 @@ impl Plugin for NewGameRunScreenPlugin {
 
 fn spawn_game_run(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut next_state: ResMut<NextState<AppState>>,
     mut selected_game_run_mode: ResMut<SelectedGameRunMode>,
     game_run_q: Query<Entity, With<GameRun>>,
@@ -22,16 +24,23 @@ fn spawn_game_run(
     for game_run in game_run_q {
         commands.entity(game_run).despawn();
     }
-    let new_game_run = match &*selected_game_run_mode {
-        SelectedGameRunMode::None => {
-            warn!("No selected game run mode found!");
-            return;
-            // TODO: do something so the user can continue
+    match selected_game_run_mode.0 {
+        Some(GameRunMode::Training) => {
+            selected_game_run_mode.0 = None;
+            commands.spawn(GameRun::new_training());
+            next_state.set(AppState::ResetGameplay);
         }
-        SelectedGameRunMode::Training => GameRun::new_training(),
-        SelectedGameRunMode::Game => GameRun::new_game(),
+        Some(GameRunMode::Game) => {
+            selected_game_run_mode.0 = None;
+            commands.spawn(GameRun::new_game());
+            next_state.set(AppState::ResetGameplay);
+        }
+        Some(GameRunMode::SingleLevel) => {
+            spawn_level_select_menu(commands, &asset_server);
+        }
+        None => {
+            // TODO: do something so the user can continue
+            warn!("No selected game run mode found!");
+        }
     };
-    *selected_game_run_mode = SelectedGameRunMode::None;
-    commands.spawn(new_game_run);
-    next_state.set(AppState::ResetGameplay);
 }

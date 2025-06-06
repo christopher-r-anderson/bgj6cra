@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     gameplay::level::LevelConfig,
-    levels::{game_01, training_01, training_02, training_03},
+    levels::{game_01, game_02, training_01, training_02, training_03},
 };
 
 pub struct GameRunPlugin;
@@ -21,39 +21,64 @@ pub enum LevelStatus {
     Completed,
 }
 
-#[derive(Resource, Debug, Default)]
-pub enum SelectedGameRunMode {
-    #[default]
-    None,
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GameRunMode {
     Training,
     Game,
+    SingleLevel,
 }
+
+#[derive(Resource, Debug, Default)]
+pub struct SelectedGameRunMode(pub Option<GameRunMode>);
 
 #[derive(Component, Clone, Debug)]
 pub struct GameRun {
     index: usize,
     level_statuses: Vec<LevelStatus>,
+    // TODO: instead of passing around config methods to avoid useless resource usage, instantiate enemies on demand
     levels: Vec<fn(&AssetServer) -> LevelConfig>,
+    mode: GameRunMode,
 }
 
 impl GameRun {
+    pub fn game_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
+        vec![game_01::get_config, game_02::get_config]
+    }
+    pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
+        vec![
+            training_01::get_config,
+            training_02::get_config,
+            training_03::get_config,
+        ]
+    }
     pub fn new_game() -> Self {
+        let levels = Self::game_levels();
         Self {
             index: 0,
-            level_statuses: vec![LevelStatus::default(); 1],
-            levels: vec![game_01::get_config],
+            level_statuses: vec![LevelStatus::default(); levels.len()],
+            levels,
+            mode: GameRunMode::Game,
         }
     }
     pub fn new_training() -> Self {
+        let levels = Self::training_levels();
         Self {
             index: 0,
-            level_statuses: vec![LevelStatus::default(); 3],
-            levels: vec![
-                training_01::get_config,
-                training_02::get_config,
-                training_03::get_config,
-            ],
+            level_statuses: vec![LevelStatus::default(); levels.len()],
+            levels,
+            mode: GameRunMode::Training,
         }
+    }
+    pub fn new_single_level(level_get_config: fn(&AssetServer) -> LevelConfig) -> Self {
+        Self {
+            index: 0,
+            level_statuses: vec![LevelStatus::default(); 1],
+            levels: vec![level_get_config],
+            mode: GameRunMode::SingleLevel,
+        }
+    }
+    pub fn mode(&self) -> GameRunMode {
+        self.mode
     }
     pub fn advance_current_level(&mut self) -> Result<(), String> {
         if self.has_more_levels() {

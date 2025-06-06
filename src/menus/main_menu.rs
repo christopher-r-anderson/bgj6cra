@@ -3,7 +3,7 @@ use bevy_flair::style::components::NodeStyleSheet;
 
 use crate::{
     app_state::AppState,
-    gameplay::game_run::SelectedGameRunMode,
+    gameplay::game_run::{GameRunMode, SelectedGameRunMode},
     menu::{ButtonActivate, NavigableChildren, button},
 };
 
@@ -28,7 +28,7 @@ pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
                     |_trigger: Trigger<ButtonActivate>,
                      mut selected_mode: ResMut<SelectedGameRunMode>,
                      mut next_state: ResMut<NextState<AppState>>| {
-                        *selected_mode = SelectedGameRunMode::Game;
+                        selected_mode.0 = Some(GameRunMode::Game);
                         next_state.set(AppState::ResetGameRun);
                     },
                 );
@@ -37,7 +37,16 @@ pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
                     |_trigger: Trigger<ButtonActivate>,
                      mut selected_mode: ResMut<SelectedGameRunMode>,
                      mut next_state: ResMut<NextState<AppState>>| {
-                        *selected_mode = SelectedGameRunMode::Training;
+                        selected_mode.0 = Some(GameRunMode::Training);
+                        next_state.set(AppState::ResetGameRun);
+                    },
+                );
+
+                spawner.spawn(button("Level Select")).observe(
+                    |_trigger: Trigger<ButtonActivate>,
+                     mut selected_mode: ResMut<SelectedGameRunMode>,
+                     mut next_state: ResMut<NextState<AppState>>| {
+                        selected_mode.0 = Some(GameRunMode::SingleLevel);
                         next_state.set(AppState::ResetGameRun);
                     },
                 );
