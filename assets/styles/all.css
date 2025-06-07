@@ -202,6 +202,13 @@
     width: var(--stage-width);
 }
 
+.level-stats-panel {
+    position: absolute;
+    height: 100%;
+    left: 50%;
+    margin-left: calc(var(--stage-width) / 2 + 20px);
+}
+
 .level-info-panel {
     height: 100%;
     padding: 20px;

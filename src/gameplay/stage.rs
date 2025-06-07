@@ -3,7 +3,10 @@ use bevy_flair::style::components::{ClassList, NodeStyleSheet};
 
 use crate::{
     app_state::AppState,
-    gameplay::{game_run::GameRun, level::LevelConfig},
+    gameplay::{
+        game_run::GameRun,
+        level::{LevelConfig, LevelStats},
+    },
 };
 
 pub const STAGE_WIDTH: f32 = 520.;
@@ -13,7 +16,8 @@ pub struct StagePlugin;
 
 impl Plugin for StagePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.add_systems(Startup, setup)
+            .add_systems(Update, update_level_stopwatch_text);
     }
 }
 
@@ -72,4 +76,29 @@ pub fn spawn_level_info_panel(
             ],
         )),
     ));
+}
+
+#[derive(Component, Debug)]
+struct LevelStopwatchText;
+
+pub fn spawn_level_stats_panel(commands: &mut Commands, asset_server: &AssetServer) -> impl Bundle {
+    commands.spawn((
+        StateScoped(AppState::Gameplay),
+        NodeStyleSheet::new(asset_server.load("styles/all.css")),
+        Node::default(),
+        ClassList::new_with_classes(["level-stats-panel"]),
+        Children::spawn_one((
+            Text::default(),
+            Children::spawn_one((TextSpan::new(format!("{:.2}", 0.)), LevelStopwatchText)),
+        )),
+    ));
+}
+
+fn update_level_stopwatch_text(
+    level_stats: Single<&LevelStats>,
+    mut span_q: Query<&mut TextSpan, With<LevelStopwatchText>>,
+) {
+    for mut span in &mut span_q {
+        **span = format!("{:.2}", level_stats.stopwatch.elapsed_secs());
+    }
 }

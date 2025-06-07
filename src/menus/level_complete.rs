@@ -80,9 +80,10 @@ pub fn spawn_level_complete_menu(
         ),
     };
     let stats = format!(
-        "Level Enemies Destroyed: {}/{}",
+        "Level Enemies Destroyed: {}/{}\nin {:.2} secs",
         level_stats.enemy_counts.total(),
-        level_stats.original_enemy_counts.total()
+        level_stats.original_enemy_counts.total(),
+        level_stats.stopwatch.elapsed_secs(),
     );
     let level_stats = level_stats.clone();
     let has_more_levels = game_run.has_more_levels();

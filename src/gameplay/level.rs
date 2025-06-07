@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::Stopwatch};
 
 use crate::{
     app_state::AppState,
@@ -9,7 +9,7 @@ use crate::{
         explosion::Explosion,
         game_run::{GameRun, LevelStatus},
         player::{PlayerDestroyedEvent, player_bundle},
-        stage::{spawn_level_info_panel, spawn_stage},
+        stage::{spawn_level_info_panel, spawn_level_stats_panel, spawn_stage},
     },
     menus::level_complete::spawn_level_complete_menu,
 };
@@ -28,7 +28,8 @@ impl Plugin for LevelPlugin {
             .add_observer(on_player_destroyed)
             .add_systems(
                 FixedUpdate,
-                check_level_complete.run_if(in_state(LevelState::Playing)),
+                (check_level_complete, tick_level_stats_stopwatch)
+                    .run_if(in_state(LevelState::Playing)),
             )
             .add_systems(OnEnter(LevelState::Loading), spawn_level)
             .add_systems(OnEnter(LevelState::Complete), on_level_complete)
@@ -52,6 +53,7 @@ pub struct LevelStats {
     pub enemy_counts: EnemyCounts,
     pub original_enemy_counts: EnemyCounts,
     pub success: Option<bool>,
+    pub stopwatch: Stopwatch,
 }
 
 impl LevelStats {
@@ -60,8 +62,13 @@ impl LevelStats {
             original_enemy_counts,
             enemy_counts: EnemyCounts::default(),
             success: None,
+            stopwatch: Stopwatch::new(),
         }
     }
+}
+
+fn tick_level_stats_stopwatch(time: Res<Time>, mut level_stats: Single<&mut LevelStats>) {
+    level_stats.stopwatch.tick(time.delta());
 }
 
 pub struct LevelConfig {
@@ -95,6 +102,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
         LevelStats::new((&level_config.enemies).into()),
     ));
     spawn_level_info_panel(&mut commands, &asset_server, &level_config, &game_run);
+    spawn_level_stats_panel(&mut commands, &asset_server);
     spawn_stage(&mut commands, &asset_server);
     commands.spawn(player_bundle(&asset_server, level_config.start_position));
     commands.spawn_batch(level_config.enemies);
