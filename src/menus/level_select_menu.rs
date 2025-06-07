@@ -27,7 +27,7 @@ pub fn spawn_level_select_menu(mut commands: Commands, asset_server: &AssetServe
                 ),
                 (
                     Name::new("Level Select Menu"),
-                    ClassList::new_with_classes(["dialog-menu"]),
+                    ClassList::new_with_classes(["dialog-menu", "level-select-menu"]),
                     Node::default(),
                     NavigableChildren::default(),
                     Children::spawn(SpawnWith(move |spawner: &mut ChildSpawner| {
