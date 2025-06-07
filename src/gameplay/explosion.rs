@@ -212,7 +212,7 @@ fn update_explosion(
             };
             let pixel_in_scale = 1. / mesh_size;
             transform.scale = (source_scale.0
-                + (pixel_in_scale * 100. * explosion_lifecycle.0.fraction()))
+                + (pixel_in_scale * 80. * explosion_lifecycle.0.fraction()))
             .extend(1.);
         }
     }

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     gameplay::level::LevelConfig,
     levels::{
-        game::{game_01, game_02, path},
+        game::{game_01, game_02, in_yer_face_1, in_yer_face_2, in_yer_face_3, path},
         training::{training_01, training_02, training_03, wall},
     },
 };
@@ -45,7 +45,14 @@ pub struct GameRun {
 
 impl GameRun {
     pub fn game_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
-        vec![path::get_config, game_01::get_config, game_02::get_config]
+        vec![
+            in_yer_face_1::get_config,
+            in_yer_face_2::get_config,
+            in_yer_face_3::get_config,
+            path::get_config,
+            game_01::get_config,
+            game_02::get_config,
+        ]
     }
     pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
         vec![
