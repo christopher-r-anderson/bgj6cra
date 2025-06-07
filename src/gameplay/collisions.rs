@@ -56,11 +56,7 @@ fn handle_player_projectile_collisions(
                     (
                         *entity1,
                         *entity2,
-                        EnemyCollisionEvent::new(
-                            target_class.clone(),
-                            target_team.clone(),
-                            ap.clone(),
-                        ),
+                        EnemyCollisionEvent::new(*target_class, *target_team, ap.clone()),
                     )
                 }
                 (Err(_), Ok(ap)) => {
@@ -71,11 +67,7 @@ fn handle_player_projectile_collisions(
                     (
                         *entity2,
                         *entity1,
-                        EnemyCollisionEvent::new(
-                            target_class.clone(),
-                            target_team.clone(),
-                            ap.clone(),
-                        ),
+                        EnemyCollisionEvent::new(*target_class, *target_team, ap.clone()),
                     )
                 }
                 _ => {

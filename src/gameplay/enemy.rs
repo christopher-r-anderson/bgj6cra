@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{platform::collections::HashMap, prelude::*};
 
 use crate::{
     app_state::AppState,
@@ -7,6 +7,7 @@ use crate::{
         collisions::CollisionLayer,
         energy::{AttackPoints, HitPoints},
         explosion::ExplosionChain,
+        level::LevelStats,
     },
 };
 
@@ -33,42 +34,44 @@ impl Plugin for EnemyPlugin {
 #[reflect(Component)]
 pub struct Enemy;
 
-#[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
+#[derive(Component, Clone, Copy, Debug, Hash, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyClass {
     Base,
-    Defender,
+    DefenderOne,
+    DefenderTwo,
+    DefenderThree,
     Land,
     Shadow,
     Wall,
-    // Projectile,
 }
 
-impl std::fmt::Display for EnemyClass {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            EnemyClass::Base => write!(f, "Base"),
-            EnemyClass::Shadow => write!(f, "Shadow"),
-            EnemyClass::Defender => write!(f, "Defender"),
-            EnemyClass::Land => write!(f, "Land"),
-            EnemyClass::Wall => write!(f, "Wall"),
-            // TODO: Add projectiles (and probably Attacker?)
-            // EnemyClass::Projectile => write!(f, "Projectile"),
+impl EnemyClass {
+    pub fn in_order() -> [Self; 7] {
+        [
+            Self::Base,
+            Self::Shadow,
+            Self::DefenderOne,
+            Self::DefenderTwo,
+            Self::DefenderThree,
+            Self::Land,
+            Self::Wall,
+        ]
+    }
+    pub fn index_of(&self, wave: Self) -> usize {
+        match wave {
+            Self::Base => 0,
+            Self::Shadow => 1,
+            Self::DefenderOne => 2,
+            Self::DefenderTwo => 3,
+            Self::DefenderThree => 4,
+            Self::Land => 5,
+            Self::Wall => 6,
         }
     }
 }
 
-/// Each Enemy Class explodes in sequence through its Waves
-#[derive(Component, Clone, Debug, Default, PartialEq, Eq, Reflect)]
-#[reflect(Component)]
-pub enum EnemyClassWave {
-    #[default]
-    Primary,
-    Secondary,
-    Tertiary,
-}
-
-#[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyTeam {
     Alien,
@@ -88,35 +91,25 @@ impl std::fmt::Display for EnemyTeam {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct EnemyCounts {
-    base: u32,
-    shadow: u32,
-    defender_one: u32,
-    defender_two: u32,
-    defender_three: u32,
-    land: u32,
-}
+#[derive(Clone, Debug, Default, Deref, DerefMut)]
+pub struct EnemyCounts(HashMap<EnemyClass, u32>);
 
 impl EnemyCounts {
-    pub fn increment(&mut self, class: &EnemyClass, wave: &EnemyClassWave) {
-        match (class, wave) {
-            (EnemyClass::Base, _) => self.base += 1,
-            (EnemyClass::Defender, EnemyClassWave::Primary) => self.defender_one += 1,
-            (EnemyClass::Defender, EnemyClassWave::Secondary) => self.defender_two += 1,
-            (EnemyClass::Defender, EnemyClassWave::Tertiary) => self.defender_three += 1,
-            (EnemyClass::Land, _) => self.land += 1,
-            (EnemyClass::Shadow, _) => self.shadow += 1,
-            (EnemyClass::Wall, _) => {}
-        }
+    pub fn started_with_enemy(&self, class: &EnemyClass) -> bool {
+        self.0.get(class).copied().unwrap_or_default() > 0
+    }
+    pub fn increment(&mut self, class: &EnemyClass) {
+        *self.0.entry(*class).or_default() += 1;
+    }
+    pub fn count(&self, class: &EnemyClass) -> u32 {
+        self.0.get(class).copied().unwrap_or_default()
     }
     pub fn total(&self) -> u32 {
-        self.base
-            + self.shadow
-            + self.defender_one
-            + self.defender_two
-            + self.defender_three
-            + self.land
+        EnemyClass::in_order()
+            .into_iter()
+            .filter(|class| class != &EnemyClass::Wall)
+            .map(|c| self.count(&c))
+            .sum()
     }
 }
 
@@ -124,7 +117,7 @@ impl From<&Vec<EnemyBundle>> for EnemyCounts {
     fn from(enemies: &Vec<EnemyBundle>) -> Self {
         let mut counts = Self::default();
         for enemy in enemies {
-            counts.increment(&enemy.class, &enemy.wave);
+            counts.increment(&enemy.class);
         }
         counts
     }
@@ -137,12 +130,17 @@ pub enum EnemyDestruction {
     Impossible,
 }
 
+enum DefenderClass {
+    One,
+    Two,
+    Three,
+}
+
 #[derive(Bundle)]
 pub struct EnemyBundle {
     enemy: Enemy,
     class: EnemyClass,
     team: EnemyTeam,
-    wave: EnemyClassWave,
     destruction: EnemyDestruction,
     name: Name,
     scene: SceneRoot,
@@ -165,7 +163,6 @@ impl EnemyBundle {
             name: Name::new("Alien Base"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Base,
-            wave: EnemyClassWave::Primary,
             // TODO: this should be a marker trait for simplicity and querying, but right now everything is an EnemyBundle
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(
@@ -185,18 +182,24 @@ impl EnemyBundle {
             state_scoped: StateScoped(AppState::Gameplay),
         }
     }
-    pub fn new_defender(asset_server: &AssetServer, position: Vec2, wave: EnemyClassWave) -> Self {
-        let scene = match wave {
-            EnemyClassWave::Primary => "enemies/enemy-defender-one.glb",
-            EnemyClassWave::Secondary => "enemies/enemy-defender-two.glb",
-            EnemyClassWave::Tertiary => "enemies/enemy-defender-three.glb",
+    fn new_defender(
+        asset_server: &AssetServer,
+        position: Vec2,
+        defender_class: DefenderClass,
+    ) -> Self {
+        let (class, scene) = match defender_class {
+            DefenderClass::One => (EnemyClass::DefenderOne, "enemies/enemy-defender-one.glb"),
+            DefenderClass::Two => (EnemyClass::DefenderTwo, "enemies/enemy-defender-two.glb"),
+            DefenderClass::Three => (
+                EnemyClass::DefenderThree,
+                "enemies/enemy-defender-three.glb",
+            ),
         };
         Self {
             enemy: Enemy,
             name: Name::new("Alien Defender"),
             team: EnemyTeam::Alien,
-            class: EnemyClass::Defender,
-            wave,
+            class,
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(scene))),
             ap: AttackPoints(1),
@@ -213,13 +216,13 @@ impl EnemyBundle {
         }
     }
     pub fn new_primary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, EnemyClassWave::Primary)
+        Self::new_defender(asset_server, position, DefenderClass::One)
     }
     pub fn new_secondary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, EnemyClassWave::Secondary)
+        Self::new_defender(asset_server, position, DefenderClass::Two)
     }
     pub fn new_tertiary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, EnemyClassWave::Tertiary)
+        Self::new_defender(asset_server, position, DefenderClass::Three)
     }
     pub fn new_land(asset_server: &AssetServer, position: Vec2, scale: Vec2) -> Self {
         Self {
@@ -227,7 +230,6 @@ impl EnemyBundle {
             name: Name::new("Alien Land"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Land,
-            wave: EnemyClassWave::Primary,
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-land.glb")),
@@ -247,8 +249,7 @@ impl EnemyBundle {
             enemy: Enemy,
             name: Name::new("Alien Defender"),
             team: EnemyTeam::Alien,
-            class: EnemyClass::Defender,
-            wave: EnemyClassWave::Primary,
+            class: EnemyClass::Shadow,
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-shadow.glb")),
@@ -272,7 +273,6 @@ impl EnemyBundle {
             name: Name::new("Alien Wall"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Wall,
-            wave: EnemyClassWave::Primary,
             destruction: EnemyDestruction::Impossible,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-wall.glb")),
@@ -315,15 +315,9 @@ impl EnemyCollisionEvent {
 fn on_enemy_collision(
     trigger: Trigger<EnemyCollisionEvent>,
     mut commands: Commands,
-    mut enemy_q: Query<(
-        &mut HitPoints,
-        &Transform,
-        &EnemyClass,
-        &EnemyClassWave,
-        &EnemyTeam,
-    )>,
+    mut enemy_q: Query<(&mut HitPoints, &Transform, &EnemyClass, &EnemyTeam)>,
 ) {
-    let Ok((mut hp, transform, class, wave, team)) = enemy_q.get_mut(trigger.target()) else {
+    let Ok((mut hp, transform, &class, &team)) = enemy_q.get_mut(trigger.target()) else {
         warn!("Could not find just collided Enemy");
         return;
     };
@@ -331,12 +325,11 @@ fn on_enemy_collision(
     if hp.0 == 0 {
         commands.trigger_targets(
             EnemyDestroyedEvent {
-                class: class.clone(),
+                class,
                 destruction_source: EnemyDestructionSource::Player,
                 position: transform.translation.truncate(),
                 scale: transform.scale.truncate(),
-                team: team.clone(),
-                wave: wave.clone(),
+                team,
             },
             trigger.target(),
         );
@@ -356,7 +349,6 @@ pub struct EnemyDestroyedEvent {
     pub position: Vec2,
     pub scale: Vec2,
     pub team: EnemyTeam,
-    pub wave: EnemyClassWave,
 }
 
 fn remove_enemy_when_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut commands: Commands) {
@@ -366,7 +358,7 @@ fn remove_enemy_when_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut comman
 fn spawn_chain_when_destroyed_by_player(
     trigger: Trigger<EnemyDestroyedEvent>,
     mut commands: Commands,
-    waves_q: Query<(&EnemyClass, &EnemyClassWave)>,
+    level_stats: Single<&LevelStats>,
 ) {
     let EnemyDestroyedEvent {
         class,
@@ -374,25 +366,12 @@ fn spawn_chain_when_destroyed_by_player(
         position: _,
         scale: _,
         team,
-        wave,
     } = trigger.event();
-    let defender_waves = waves_q
-        .iter()
-        .filter_map(|(class, wave)| {
-            if class == &EnemyClass::Defender {
-                Some(wave)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<_>>();
     if destruction_source == &EnemyDestructionSource::Player {
-        if let Some(next_stage) =
-            ExplosionChain::following_stage(class, wave, &defender_waves.into())
-        {
+        if let Some(next_stage) = ExplosionChain::following_class(class, &level_stats) {
             commands.spawn((
                 StateScoped(AppState::Gameplay),
-                ExplosionChain::new(team.clone(), next_stage.0, next_stage.1),
+                ExplosionChain::new(*team, next_stage),
             ));
         }
     }

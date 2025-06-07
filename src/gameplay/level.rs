@@ -109,9 +109,7 @@ fn on_enemy_destroyed(
     mut level_stats: Single<&mut LevelStats>,
 ) {
     let event = trigger.event();
-    level_stats
-        .enemy_counts
-        .increment(&event.class, &event.wave);
+    level_stats.enemy_counts.increment(&event.class);
 }
 
 fn check_level_complete(
