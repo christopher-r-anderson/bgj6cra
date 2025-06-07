@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     app_state::AppState,
     gameplay::{
-        enemy::{Enemy, EnemyBundle, EnemyDestroyedEvent, EnemyDestruction},
+        enemy::{Enemy, EnemyBundle, EnemyCounts, EnemyDestroyedEvent, EnemyDestruction},
         explosion::Explosion,
         game_run::{GameRun, LevelStatus},
         player::{PlayerDestroyedEvent, player_bundle},
@@ -47,20 +47,19 @@ impl Plugin for LevelPlugin {
 #[reflect(Component)]
 pub struct Level;
 
-#[derive(Component, Clone, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct LevelStats {
-    pub enemies_destroyed: u32,
+    pub enemy_counts: EnemyCounts,
+    pub original_enemy_counts: EnemyCounts,
     pub success: Option<bool>,
-    pub total_enemies: u32,
 }
 
 impl LevelStats {
-    fn new(total_enemies: u32) -> Self {
+    fn new(original_enemy_counts: EnemyCounts) -> Self {
         Self {
-            enemies_destroyed: 0,
+            original_enemy_counts,
+            enemy_counts: EnemyCounts::default(),
             success: None,
-            total_enemies,
         }
     }
 }
@@ -70,6 +69,12 @@ pub struct LevelConfig {
     pub name: &'static str,
     pub notes: &'static str,
     pub start_position: Vec2,
+}
+
+impl LevelConfig {
+    pub fn enemy_counts(&self) -> EnemyCounts {
+        (&self.enemies).into()
+    }
 }
 
 #[derive(SubStates, Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -87,16 +92,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
     let level_config = game_run.current_level_config(&asset_server);
     commands.spawn((
         StateScoped(AppState::Gameplay),
-        LevelStats::new(
-            level_config
-                .enemies
-                .iter()
-                .filter(|enemy| enemy.requires_destruction())
-                .collect::<Vec<_>>()
-                .len()
-                .try_into()
-                .expect("There shouldn't be more enemies than u32"),
-        ),
+        LevelStats::new((&level_config.enemies).into()),
     ));
     spawn_level_info_panel(&mut commands, &asset_server, &level_config, &game_run);
     spawn_stage(&mut commands, &asset_server);
@@ -109,10 +105,13 @@ fn check_load_status(mut next_state: ResMut<NextState<LevelState>>) {
 }
 
 fn on_enemy_destroyed(
-    _trigger: Trigger<EnemyDestroyedEvent>,
+    trigger: Trigger<EnemyDestroyedEvent>,
     mut level_stats: Single<&mut LevelStats>,
 ) {
-    level_stats.enemies_destroyed += 1;
+    let event = trigger.event();
+    level_stats
+        .enemy_counts
+        .increment(&event.class, &event.wave);
 }
 
 fn check_level_complete(

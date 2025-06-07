@@ -22,7 +22,7 @@ impl From<&LevelStats> for LevelCompletionStatus {
     fn from(level_stats: &LevelStats) -> Self {
         match (
             level_stats.success,
-            level_stats.enemies_destroyed == level_stats.total_enemies,
+            level_stats.enemy_counts.total() == level_stats.original_enemy_counts.total(),
         ) {
             (Some(true), _) => LevelCompletionStatus::Survived,
             (None, _) => LevelCompletionStatus::Error,
@@ -81,7 +81,8 @@ pub fn spawn_level_complete_menu(
     };
     let stats = format!(
         "Level Enemies Destroyed: {}/{}",
-        level_stats.enemies_destroyed, level_stats.total_enemies
+        level_stats.enemy_counts.total(),
+        level_stats.original_enemy_counts.total()
     );
     let level_stats = level_stats.clone();
     let has_more_levels = game_run.has_more_levels();

@@ -88,6 +88,48 @@ impl std::fmt::Display for EnemyTeam {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct EnemyCounts {
+    base: u32,
+    shadow: u32,
+    defender_one: u32,
+    defender_two: u32,
+    defender_three: u32,
+    land: u32,
+}
+
+impl EnemyCounts {
+    pub fn increment(&mut self, class: &EnemyClass, wave: &EnemyClassWave) {
+        match (class, wave) {
+            (EnemyClass::Base, _) => self.base += 1,
+            (EnemyClass::Defender, EnemyClassWave::Primary) => self.defender_one += 1,
+            (EnemyClass::Defender, EnemyClassWave::Secondary) => self.defender_two += 1,
+            (EnemyClass::Defender, EnemyClassWave::Tertiary) => self.defender_three += 1,
+            (EnemyClass::Land, _) => self.land += 1,
+            (EnemyClass::Shadow, _) => self.shadow += 1,
+            (EnemyClass::Wall, _) => {}
+        }
+    }
+    pub fn total(&self) -> u32 {
+        self.base
+            + self.shadow
+            + self.defender_one
+            + self.defender_two
+            + self.defender_three
+            + self.land
+    }
+}
+
+impl From<&Vec<EnemyBundle>> for EnemyCounts {
+    fn from(enemies: &Vec<EnemyBundle>) -> Self {
+        let mut counts = Self::default();
+        for enemy in enemies {
+            counts.increment(&enemy.class, &enemy.wave);
+        }
+        counts
+    }
+}
+
 #[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyDestruction {
