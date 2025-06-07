@@ -55,6 +55,16 @@ impl std::fmt::Display for EnemyClass {
     }
 }
 
+/// Each Enemy Class explodes in sequence through its Waves
+#[derive(Component, Clone, Debug, Default, PartialEq, Eq, Reflect)]
+#[reflect(Component)]
+pub enum EnemyClassWave {
+    #[default]
+    Primary,
+    Secondary,
+    Tertiary,
+}
+
 #[derive(Component, Clone, Debug, PartialEq, Eq, Reflect)]
 #[reflect(Component)]
 pub enum EnemyTeam {
@@ -87,6 +97,7 @@ pub struct EnemyBundle {
     enemy: Enemy,
     class: EnemyClass,
     team: EnemyTeam,
+    wave: EnemyClassWave,
     destruction: EnemyDestruction,
     name: Name,
     scene: SceneRoot,
@@ -109,6 +120,7 @@ impl EnemyBundle {
             name: Name::new("Alien Base"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Base,
+            wave: EnemyClassWave::Primary,
             // TODO: this should be a marker trait for simplicity and querying, but right now everything is an EnemyBundle
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(
@@ -128,16 +140,20 @@ impl EnemyBundle {
             state_scoped: StateScoped(AppState::Gameplay),
         }
     }
-    pub fn new_defender(asset_server: &AssetServer, position: Vec2) -> Self {
+    pub fn new_defender(asset_server: &AssetServer, position: Vec2, wave: EnemyClassWave) -> Self {
+        let scene = match wave {
+            EnemyClassWave::Primary => "enemies/enemy-defender-one.glb",
+            EnemyClassWave::Secondary => "enemies/enemy-defender-two.glb",
+            EnemyClassWave::Tertiary => "enemies/enemy-defender-three.glb",
+        };
         Self {
             enemy: Enemy,
             name: Name::new("Alien Defender"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Defender,
+            wave,
             destruction: EnemyDestruction::Required,
-            scene: SceneRoot(
-                asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-one.glb")),
-            ),
+            scene: SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(scene))),
             ap: AttackPoints(1),
             hp: HitPoints(1),
             transform: Transform::from_xyz(position.x, position.y, 3.),
@@ -151,12 +167,22 @@ impl EnemyBundle {
             state_scoped: StateScoped(AppState::Gameplay),
         }
     }
+    pub fn new_primary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self::new_defender(asset_server, position, EnemyClassWave::Primary)
+    }
+    pub fn new_secondary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self::new_defender(asset_server, position, EnemyClassWave::Secondary)
+    }
+    pub fn new_tertiary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self::new_defender(asset_server, position, EnemyClassWave::Tertiary)
+    }
     pub fn new_land(asset_server: &AssetServer, position: Vec2, scale: Vec2) -> Self {
         Self {
             enemy: Enemy,
             name: Name::new("Alien Land"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Land,
+            wave: EnemyClassWave::Primary,
             destruction: EnemyDestruction::Required,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-land.glb")),
@@ -177,6 +203,7 @@ impl EnemyBundle {
             name: Name::new("Alien Wall"),
             team: EnemyTeam::Alien,
             class: EnemyClass::Wall,
+            wave: EnemyClassWave::Primary,
             destruction: EnemyDestruction::Impossible,
             scene: SceneRoot(
                 asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-wall.glb")),
@@ -219,9 +246,15 @@ impl EnemyCollisionEvent {
 fn on_enemy_collision(
     trigger: Trigger<EnemyCollisionEvent>,
     mut commands: Commands,
-    mut enemy_q: Query<(&mut HitPoints, &Transform, &EnemyClass, &EnemyTeam)>,
+    mut enemy_q: Query<(
+        &mut HitPoints,
+        &Transform,
+        &EnemyClass,
+        &EnemyClassWave,
+        &EnemyTeam,
+    )>,
 ) {
-    let Ok((mut hp, transform, class, team)) = enemy_q.get_mut(trigger.target()) else {
+    let Ok((mut hp, transform, class, wave, team)) = enemy_q.get_mut(trigger.target()) else {
         warn!("Could not find just collided Enemy");
         return;
     };
@@ -234,6 +267,7 @@ fn on_enemy_collision(
                 position: transform.translation.truncate(),
                 scale: transform.scale.truncate(),
                 team: team.clone(),
+                wave: wave.clone(),
             },
             trigger.target(),
         );
@@ -253,6 +287,7 @@ pub struct EnemyDestroyedEvent {
     pub position: Vec2,
     pub scale: Vec2,
     pub team: EnemyTeam,
+    pub wave: EnemyClassWave,
 }
 
 fn remove_enemy_when_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut commands: Commands) {
@@ -262,6 +297,7 @@ fn remove_enemy_when_destroyed(trigger: Trigger<EnemyDestroyedEvent>, mut comman
 fn spawn_chain_when_destroyed_by_player(
     trigger: Trigger<EnemyDestroyedEvent>,
     mut commands: Commands,
+    waves_q: Query<(&EnemyClass, &EnemyClassWave)>,
 ) {
     let EnemyDestroyedEvent {
         class,
@@ -269,12 +305,25 @@ fn spawn_chain_when_destroyed_by_player(
         position: _,
         scale: _,
         team,
+        wave,
     } = trigger.event();
+    let defender_waves = waves_q
+        .iter()
+        .filter_map(|(class, wave)| {
+            if class == &EnemyClass::Defender {
+                Some(wave)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
     if destruction_source == &EnemyDestructionSource::Player {
-        if let Some(next_stage) = ExplosionChain::following_stage(class) {
+        if let Some(next_stage) =
+            ExplosionChain::following_stage(class, wave, &defender_waves.into())
+        {
             commands.spawn((
                 StateScoped(AppState::Gameplay),
-                ExplosionChain::new(team.clone(), next_stage),
+                ExplosionChain::new(team.clone(), next_stage.0, next_stage.1),
             ));
         }
     }

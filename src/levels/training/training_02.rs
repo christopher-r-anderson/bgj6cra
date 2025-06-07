@@ -14,9 +14,9 @@ pub fn get_config(asset_server: &AssetServer) -> LevelConfig {
         start_position: vec2(0., 0.),
         enemies: vec![
             EnemyBundle::new_base(asset_server, vec2(0., 330.)),
-            EnemyBundle::new_defender(asset_server, vec2(-60., 200.)),
-            EnemyBundle::new_defender(asset_server, vec2(-20., 200.)),
-            EnemyBundle::new_defender(asset_server, vec2(40., 0.)),
+            EnemyBundle::new_primary_defender(asset_server, vec2(-60., 200.)),
+            EnemyBundle::new_primary_defender(asset_server, vec2(-20., 200.)),
+            EnemyBundle::new_primary_defender(asset_server, vec2(40., 0.)),
         ],
     }
 }
