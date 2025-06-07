@@ -52,7 +52,7 @@ pub fn spawn_level_info_panel(
     let LevelConfig { name, notes, .. } = level_config;
     commands.spawn((
         StateScoped(AppState::Gameplay),
-        NodeStyleSheet::new(asset_server.load("styles/stage.css")),
+        NodeStyleSheet::new(asset_server.load("styles/all.css")),
         Node::default(),
         ClassList::new_with_classes(["level-info-panel"]),
         Children::spawn_one((

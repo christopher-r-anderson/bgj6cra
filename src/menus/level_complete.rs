@@ -92,7 +92,7 @@ pub fn spawn_level_complete_menu(
             "globally-center-children",
             "overlay",
         ]),
-        NodeStyleSheet::new(asset_server.load("styles/level_complete.css")),
+        NodeStyleSheet::new(asset_server.load("styles/all.css")),
         Node::default(),
         Children::spawn_one((
             Node::default(),

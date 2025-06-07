@@ -47,7 +47,7 @@ fn spawn_countdown(mut commands: Commands, asset_server: Res<AssetServer>) {
             StateScoped(LevelState::Ready),
             Node::default(),
             ClassList::new_with_classes(["globally-center-children", "overlay", "countdown"]),
-            NodeStyleSheet::new(asset_server.load("styles/stage.css")),
+            NodeStyleSheet::new(asset_server.load("styles/all.css")),
         ))
         .with_children(|builder| {
             builder.spawn((

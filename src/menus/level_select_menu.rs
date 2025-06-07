@@ -15,7 +15,7 @@ pub fn spawn_level_select_menu(mut commands: Commands, asset_server: &AssetServe
     commands.spawn((
         StateScoped(AppState::GameRun),
         ClassList::new_with_classes(["globally-center-children", "overlay"]),
-        NodeStyleSheet::new(asset_server.load("styles/base.css")),
+        NodeStyleSheet::new(asset_server.load("styles/all.css")),
         Node::default(),
         Children::spawn_one((
             Node::default(),

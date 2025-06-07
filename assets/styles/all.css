@@ -1,0 +1,218 @@
+@font-face {
+    font-family: "Geo";
+    src: url("fonts/geo/Geo-Regular.ttf");
+}
+
+:root {
+    font-family: "Geo";
+    width: 100%;
+    height: 100%;
+}
+
+:root {
+    /* match STAGE_WIDTH */
+    --stage-width: 520px;
+    --heading-font-size: 60px;
+    --heading-text-color: green;
+    --text-font-size: 36px;
+
+    --menu-button-background-color: #ccc;
+    --menu-button-font-size: 30px;
+    --menu-button-text-color: black;
+    --menu-button-text-focus-color: green;
+}
+
+.globally-center-children {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.heading {
+    font-size: var(--heading-font-size);
+    color: var(--heading-text-color);
+    margin-bottom: 40px;
+}
+
+.text {
+    font-size: var(--text-font-size);
+}
+
+.dialog-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: auto;
+    margin-top: 30px;
+
+    Button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+
+        background-color: var(--menu-button-background-color);
+        border: 5px;
+        border-color:  var(--menu-button-background-color);
+        &:focus {
+            border-color:  var(--menu-button-text-focus-color);
+        }
+
+        font-size: var(--menu-button-font-size);
+        color: var(--menu-button-text-color);
+        &:focus {
+            color: var(--menu-button-text-focus-color);
+        }
+
+        Text {
+            transition: color 0.6s;
+        }
+    }
+}
+
+.game-menu {
+    --overlay-color: rgba(0, 0, 0, 0.8);
+    --background-color: rgb(50, 50, 51);
+    --menu-width: var(--stage-width);
+
+    --heading-text-color: green;
+    --heading-font-size: 75px;
+
+    --focus-indicator-color: green;
+    --focus-indicator-width: 2px;
+
+    --button-text-color: white;
+    --button-text-focus-color: green;
+    --button-font-size: 50px;
+
+    --floating-borders-top: 100px;
+    --floating-borders-spacing: 90px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: var(--overlay-color);
+
+    width: var(--menu-width);
+    height: 100%;
+    padding: 25px 90px 40px;
+
+    background-color: var(--background-color);
+
+    flex-direction: column;
+
+    .main-menu-heading {
+        font-size: var(--heading-font-size);
+        color: var(--heading-text-color);
+    }
+
+    Button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        margin-top: 30px;
+        background-color: transparent;
+
+        font-size: var(--button-font-size);
+        color: var(--button-text-color);
+    
+        &:focus {
+            color: var(--button-text-focus-color);
+        }
+
+        Text {
+            transition: color 0.6s;
+        }
+    }
+
+    Button,
+    #floating_borders {
+        width: 250px;
+        height: 60px;
+    }
+
+    #floating_borders {
+        display: flex;
+        position: absolute;
+        top: var(--floating-borders-top);
+        transition: top 0.6s;
+        border-left-width: var(--focus-indicator-width);
+        border-color: var(--focus-indicator-color);
+    }
+
+    Button:nth-child(2):focus~#floating_borders {
+        top: calc(var(--floating-borders-top) + var(--floating-borders-spacing) * 0);
+    }
+
+    Button:nth-child(3):focus~#floating_borders {
+        top: calc(var(--floating-borders-top) + var(--floating-borders-spacing) * 1);
+    }
+
+    Button:nth-child(4):focus~#floating_borders {
+        top: calc(var(--floating-borders-top) + var(--floating-borders-spacing) * 2);
+    }
+
+    Button:nth-child(5):focus~#floating_borders {
+        top: calc(var(--floating-borders-top) + var(--floating-borders-spacing) * 3);
+    }
+    
+}
+
+.level-complete-dialog {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin: auto;
+    padding: 20px;
+    width: var(--stage-width);
+}
+
+.level-info-panel {
+    height: 100%;
+    padding: 20px;
+    width: 50%;
+}
+
+.level-info-panel-content {
+    display: flex;
+    flex-direction: column;
+    margin-right: calc(var(--stage-width) / 2);
+    height: 100vh;
+
+    .text {
+        flex-grow: 1;
+    }
+
+    .heading {
+        margin: 0 -20px 12px 0;
+        text-align: right;
+    }
+}
+
+.countdown {
+    display: flex;
+    flex-direction: column;
+}
+
+.countdown-label {
+    font-size: 50px;
+}
+
+.countdown-time {
+    color: green;
+    font-size: 75px;
+}

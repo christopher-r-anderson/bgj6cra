@@ -1,5 +1,5 @@
 use bevy::{ecs::spawn::SpawnWith, input_focus::AutoFocus, prelude::*};
-use bevy_flair::style::components::NodeStyleSheet;
+use bevy_flair::style::components::{ClassList, NodeStyleSheet};
 
 use crate::{
     app_state::AppState,
@@ -12,14 +12,15 @@ pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
         StateScoped(AppState::Title),
         Name::new("Root"),
         Node::default(),
-        NodeStyleSheet::new(asset_server.load("styles/game_menu.css")),
+        ClassList::new_with_classes(["globally-center-children", "overlay"]),
+        NodeStyleSheet::new(asset_server.load("styles/all.css")),
         children![(
-            Name::new("game_menu"),
+            ClassList::new_with_classes(["game-menu"]),
             Node::default(),
             NavigableChildren::default(),
             Children::spawn(SpawnWith(|spawner: &mut ChildSpawner| {
                 spawner.spawn((
-                    Name::new("menu_title"),
+                    ClassList::new_with_classes(["main-menu-heading"]),
                     Node::default(),
                     Children::spawn_one(Text::new("Main Menu")),
                 ));
