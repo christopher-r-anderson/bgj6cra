@@ -70,6 +70,7 @@ pub fn player_bundle(asset_server: &AssetServer, position: Vec2) -> impl Bundle 
                 CollisionLayer::EnemyExplosion,
                 CollisionLayer::EnemyBase,
                 CollisionLayer::EnemyDefender,
+                CollisionLayer::EnemyShadow,
                 CollisionLayer::EnemyWall,
             ],
         ),
@@ -188,8 +189,8 @@ fn fire_player_projectile(
                     CollisionLayers::new(
                         CollisionLayer::PlayerProjectile,
                         [
-                            CollisionLayer::EnemyDefender,
                             CollisionLayer::EnemyBase,
+                            CollisionLayer::EnemyDefender,
                             CollisionLayer::EnemyWall,
                         ],
                     ),

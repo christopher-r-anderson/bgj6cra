@@ -33,6 +33,7 @@ pub enum CollisionLayer {
     EnemyDefender,
     EnemyExplosion,
     EnemyLand,
+    EnemyShadow,
     EnemyWall,
     Player,
     PlayerProjectile,

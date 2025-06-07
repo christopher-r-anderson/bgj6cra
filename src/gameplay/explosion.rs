@@ -8,8 +8,8 @@ use crate::{
     gameplay::{
         collisions::CollisionLayer,
         enemy::{
-            ENEMY_BASE_SIZE, ENEMY_DEFENDER_SIZE, ENEMY_LAND_SIZE, Enemy, EnemyClass,
-            EnemyClassWave, EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam,
+            ENEMY_BASE_SIZE, ENEMY_DEFENDER_SIZE, ENEMY_LAND_SIZE, ENEMY_SHADOW_SIZE, Enemy,
+            EnemyClass, EnemyClassWave, EnemyDestroyedEvent, EnemyDestructionSource, EnemyTeam,
         },
         energy::AttackPoints,
         level::LevelState,
@@ -61,7 +61,7 @@ fn on_enemy_destroyed(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-base-explosion.glb")),
         ),
-        EnemyClass::Defender => (
+        EnemyClass::Defender | EnemyClass::Shadow => (
             Collider::rectangle(ENEMY_DEFENDER_SIZE.x, ENEMY_DEFENDER_SIZE.y),
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-explosion.glb")),
@@ -142,7 +142,8 @@ impl ExplosionChain {
         defender_waves: &DefenderWavesInLevel,
     ) -> Option<(EnemyClass, EnemyClassWave)> {
         match class {
-            EnemyClass::Base => Some((EnemyClass::Defender, EnemyClassWave::Primary)),
+            EnemyClass::Base => Some((EnemyClass::Shadow, EnemyClassWave::Primary)),
+            EnemyClass::Shadow => Some((EnemyClass::Defender, EnemyClassWave::Primary)),
             EnemyClass::Defender => {
                 // TODO: This needs a better approach. Should probably be different classes, but that will require not waiting
                 //       for any non existent classes. See also DefenderWavesInLevel
@@ -278,6 +279,7 @@ fn update_explosion(
                 EnemyClass::Base => ENEMY_BASE_SIZE,
                 EnemyClass::Defender => ENEMY_DEFENDER_SIZE,
                 EnemyClass::Land => ENEMY_LAND_SIZE,
+                EnemyClass::Shadow => ENEMY_SHADOW_SIZE,
                 EnemyClass::Wall => unreachable!("Enemy Walls can't be destroyed"),
             };
             let pixel_in_scale = 1. / mesh_size;

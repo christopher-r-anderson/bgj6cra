@@ -13,6 +13,7 @@ use crate::{
 pub const ENEMY_BASE_SIZE: Vec2 = Vec2::new(80., 30.);
 pub const ENEMY_DEFENDER_SIZE: Vec2 = Vec2::new(28., 28.);
 pub const ENEMY_LAND_SIZE: Vec2 = Vec2::new(1., 1.);
+pub const ENEMY_SHADOW_SIZE: Vec2 = Vec2::new(28., 28.);
 pub const ENEMY_WALL_SIZE: Vec2 = Vec2::new(1., 1.);
 
 pub struct EnemyPlugin;
@@ -38,6 +39,7 @@ pub enum EnemyClass {
     Base,
     Defender,
     Land,
+    Shadow,
     Wall,
     // Projectile,
 }
@@ -46,6 +48,7 @@ impl std::fmt::Display for EnemyClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             EnemyClass::Base => write!(f, "Base"),
+            EnemyClass::Shadow => write!(f, "Shadow"),
             EnemyClass::Defender => write!(f, "Defender"),
             EnemyClass::Land => write!(f, "Land"),
             EnemyClass::Wall => write!(f, "Wall"),
@@ -194,6 +197,30 @@ impl EnemyBundle {
             collider: Collider::rectangle(ENEMY_LAND_SIZE.x, ENEMY_LAND_SIZE.y),
             collision_events_enabled: CollisionEventsEnabled,
             collision_layers: CollisionLayers::NONE,
+            state_scoped: StateScoped(AppState::Gameplay),
+        }
+    }
+    pub fn new_shadow(asset_server: &AssetServer, position: Vec2) -> Self {
+        Self {
+            enemy: Enemy,
+            name: Name::new("Alien Defender"),
+            team: EnemyTeam::Alien,
+            class: EnemyClass::Defender,
+            wave: EnemyClassWave::Primary,
+            destruction: EnemyDestruction::Required,
+            scene: SceneRoot(
+                asset_server.load(GltfAssetLabel::Scene(0).from_asset("enemies/enemy-shadow.glb")),
+            ),
+            ap: AttackPoints(1),
+            hp: HitPoints(1),
+            transform: Transform::from_xyz(position.x, position.y, 3.),
+            rigid_body: RigidBody::Static,
+            collider: Collider::rectangle(ENEMY_DEFENDER_SIZE.x, ENEMY_DEFENDER_SIZE.y),
+            collision_events_enabled: CollisionEventsEnabled,
+            collision_layers: CollisionLayers::new(
+                CollisionLayer::EnemyShadow,
+                [CollisionLayer::Player],
+            ),
             state_scoped: StateScoped(AppState::Gameplay),
         }
     }
