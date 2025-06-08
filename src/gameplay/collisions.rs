@@ -6,7 +6,7 @@ use crate::gameplay::{
     energy::AttackPoints,
     explosion::{Explosion, ExplosionCollisionEvent},
     level::LevelState,
-    player::{PlayerCollisionEvent, PlayerProjectile, PlayerProjectileCollisionEvent},
+    player::{Player, PlayerCollisionEvent, PlayerProjectile, PlayerProjectileCollisionEvent},
 };
 
 pub struct CollisionPlugin;
@@ -85,6 +85,7 @@ fn handle_explosion_collisions(
     mut collision_event_reader: EventReader<CollisionStarted>,
     mut commands: Commands,
     explosion_q: Query<&AttackPoints, With<Explosion>>,
+    player_q: Query<Has<Player>>,
 ) {
     for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
         let (explosion, player, ap) = match (explosion_q.get(*entity1), explosion_q.get(*entity2)) {
@@ -94,6 +95,9 @@ fn handle_explosion_collisions(
                 continue;
             }
         };
+        if player_q.get(player).is_err() {
+            return;
+        }
         commands.trigger_targets(PlayerCollisionEvent::new(ap), player);
         commands.trigger_targets(ExplosionCollisionEvent::default(), explosion);
     }
@@ -103,6 +107,7 @@ fn handle_enemy_collisions(
     mut collision_event_reader: EventReader<CollisionStarted>,
     mut commands: Commands,
     enemy_q: Query<&AttackPoints, With<Enemy>>,
+    player_q: Query<(), With<Player>>,
 ) {
     for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
         let (enemy, player, ap) = match (enemy_q.get(*entity1), enemy_q.get(*entity2)) {
@@ -112,6 +117,9 @@ fn handle_enemy_collisions(
                 continue;
             }
         };
+        if player_q.get(player).is_err() {
+            return;
+        }
         commands.trigger_targets(PlayerCollisionEvent::new(ap), player);
         commands.trigger_targets(ExplosionCollisionEvent::default(), enemy);
     }
