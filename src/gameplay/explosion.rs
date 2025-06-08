@@ -73,7 +73,10 @@ fn on_enemy_destroyed(
             asset_server
                 .load(GltfAssetLabel::Scene(0).from_asset("explosions/enemy-land-explosion.glb")),
         ),
-        EnemyClass::Wall => unreachable!("Walls can't be destroyed"),
+        EnemyClass::Wall => {
+            warn!("Walls can't be destroyed - this should not be reachable");
+            return;
+        }
     };
     commands.spawn((
         Explosion,
@@ -119,6 +122,7 @@ impl ExplosionChain {
         let mut classes = EnemyClass::in_order()
             .into_iter()
             .skip_while(|current| current != class)
+            .filter(|class| class != &EnemyClass::Wall)
             .skip(1);
         classes.find(|&class| level_stats.original_enemy_counts.started_with_enemy(&class))
     }
@@ -218,7 +222,10 @@ fn update_explosion(
                 EnemyClass::DefenderThree => ENEMY_DEFENDER_SIZE,
                 EnemyClass::Land => ENEMY_LAND_SIZE,
                 EnemyClass::Shadow => ENEMY_SHADOW_SIZE,
-                EnemyClass::Wall => unreachable!("Enemy Walls can't be destroyed"),
+                EnemyClass::Wall => {
+                    warn!("Walls can't be destroyed - this should not be reachable");
+                    continue;
+                }
             };
             let pixel_in_scale = 1. / mesh_size;
             transform.scale = (source_scale.0
