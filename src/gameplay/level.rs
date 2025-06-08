@@ -102,7 +102,7 @@ fn spawn_level(mut commands: Commands, asset_server: Res<AssetServer>, game_run:
         LevelStats::new((&level_config.enemies).into()),
     ));
     spawn_level_info_panel(&mut commands, &asset_server, &level_config, &game_run);
-    spawn_level_stats_panel(&mut commands, &asset_server);
+    spawn_level_stats_panel(&mut commands, &asset_server, &level_config.enemy_counts());
     spawn_stage(&mut commands, &asset_server);
     commands.spawn(player_bundle(&asset_server, level_config.start_position));
     commands.spawn_batch(level_config.enemies);

@@ -46,6 +46,21 @@ pub enum EnemyClass {
     Wall,
 }
 
+impl std::fmt::Display for EnemyClass {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            EnemyClass::Base => "Base",
+            EnemyClass::DefenderOne => "Defender One",
+            EnemyClass::DefenderTwo => "Defender Two",
+            EnemyClass::DefenderThree => "Defender Three",
+            EnemyClass::Land => "Land",
+            EnemyClass::Shadow => "Shadow",
+            EnemyClass::Wall => "Wall",
+        };
+        write!(f, "{name}")
+    }
+}
+
 impl EnemyClass {
     pub fn in_order() -> [Self; 7] {
         [

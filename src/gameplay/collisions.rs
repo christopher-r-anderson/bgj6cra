@@ -105,7 +105,6 @@ fn handle_enemy_collisions(
     enemy_q: Query<&AttackPoints, With<Enemy>>,
 ) {
     for CollisionStarted(entity1, entity2) in collision_event_reader.read() {
-        info!("Collision started");
         let (enemy, player, ap) = match (enemy_q.get(*entity1), enemy_q.get(*entity2)) {
             (Ok(ap), Err(_)) => (*entity1, *entity2, ap.clone()),
             (Err(_), Ok(ap)) => (*entity2, *entity1, ap.clone()),

@@ -203,10 +203,29 @@
 }
 
 .level-stats-panel {
+    display: flex;
+    flex-direction: column;
     position: absolute;
     height: 100%;
     left: 50%;
     margin-left: calc(var(--stage-width) / 2 + 20px);
+    gap: 20px;
+}
+
+.enemy-stats-display {
+    display: flex;
+    flex-direction: column;
+}
+
+.enemy-stat {
+    display: flex;
+    > *:last-child {
+        margin-left: 10px;
+    }
+}
+
+.class-destroyed {
+    color: orange;
 }
 
 .level-info-panel {

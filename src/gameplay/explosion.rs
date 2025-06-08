@@ -97,8 +97,8 @@ pub struct ExplosionCollisionEvent {}
 
 #[derive(Event, Clone, Debug, Reflect)]
 pub struct ExplosionChainEvent {
-    class: EnemyClass,
-    team: EnemyTeam,
+    pub class: EnemyClass,
+    pub team: EnemyTeam,
 }
 
 impl ExplosionChainEvent {
