@@ -49,14 +49,14 @@ pub struct GameRun {
 impl GameRun {
     pub fn game_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
         vec![
-            choose_01::get_config,
-            choose_02::get_config,
-            corridor_01::get_config,
-            corridor_02::get_config,
-            in_yer_face_1::get_config,
-            in_yer_face_2::get_config,
-            in_yer_face_3::get_config,
             path::get_config,
+            corridor_01::get_config,
+            in_yer_face_1::get_config,
+            choose_01::get_config,
+            in_yer_face_2::get_config,
+            corridor_02::get_config,
+            in_yer_face_3::get_config,
+            choose_02::get_config,
         ]
     }
     pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
