@@ -36,3 +36,12 @@ Some code is referenced/copied from:
   * the documentation/examples of crates that have been used - especially the excellent [Flair](https://github.com/eckz/bevy_flair/blob/main/examples/game_menu.rs) for the main menu. (MIT LICENSED)
 
 All other crates/code are licensed under their respective licenses and used here with permission.
+
+## Screenshots
+
+![Main menu of video game with Maxx Obliterate in vertical text.](media/MaxxObliterate-title.png)
+![Small triangle ship firing projectiles at an enemy with a wall in the way and instruction text on the side.](media/MaxxObliterate-training.png)
+!["Ready" text with a countdown timer overlaid on a video game.](media/MaxxObliterate-ready.png)
+![Small triangle ship firing projectiles at an enemy with with square orange explosions.](media/MaxxObliterate-explosion.png)
+![Level complete menu with "Next Level", "Replay Level", and "Main Menu" buttons.](media/MaxxObliterate-level-complete.png)
+![Giant green triangle takin gup most of the screen.](media/MaxxObliterate-destruction.png)
