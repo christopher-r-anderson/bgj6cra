@@ -1,3 +1,5 @@
+pub mod choose_01;
+pub mod choose_02;
 pub mod corridor_01;
 pub mod corridor_02;
 pub mod game_01;
