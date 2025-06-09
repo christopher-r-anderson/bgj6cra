@@ -5,7 +5,7 @@ use crate::{
     levels::{
         game::{
             choose_01, choose_02, corridor_01, corridor_02, in_yer_face_1, in_yer_face_2,
-            in_yer_face_3, path,
+            in_yer_face_3, path_01, path_02, path_03,
         },
         training::{base, defenders, land, secondary, shadow, wall},
     },
@@ -49,14 +49,16 @@ pub struct GameRun {
 impl GameRun {
     pub fn game_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
         vec![
-            path::get_config,
+            path_01::get_config,
             corridor_01::get_config,
             in_yer_face_1::get_config,
             choose_01::get_config,
             in_yer_face_2::get_config,
+            path_02::get_config,
             corridor_02::get_config,
             in_yer_face_3::get_config,
             choose_02::get_config,
+            path_03::get_config,
         ]
     }
     pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
