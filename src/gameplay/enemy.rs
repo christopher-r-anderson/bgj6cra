@@ -294,7 +294,7 @@ impl EnemyBundle {
             ),
             ap: AttackPoints(0),
             hp: HitPoints(0),
-            transform: Transform::from_xyz(position.x, position.y, 1.).with_scale(scale.extend(1.)),
+            transform: Transform::from_xyz(position.x, position.y, 8.).with_scale(scale.extend(1.)),
             rigid_body: RigidBody::Static,
             collider: Collider::rectangle(ENEMY_WALL_SIZE.x, ENEMY_WALL_SIZE.y),
             collision_events_enabled: CollisionEventsEnabled,
