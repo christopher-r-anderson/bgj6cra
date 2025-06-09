@@ -7,6 +7,8 @@ use crate::{
     menu::{ButtonActivate, NavigableChildren, button},
 };
 
+// Code here and in the related CSS file, originally from https://github.com/eckz/bevy_flair/blob/main/examples/game_menu.rs (MIT LICENSED)
+
 pub fn spawn_main_menu(mut commands: Commands, asset_server: &AssetServer) {
     commands.spawn((
         StateScoped(AppState::Title),

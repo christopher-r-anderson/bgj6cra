@@ -29,4 +29,10 @@ https://www.readingtype.org.uk/type/geo.html
 
 ### Other
 
-All other code and art is licensed under their respective licenses and used here with permission.
+Some code is referenced/copied from:
+
+  * https://github.com/TheBevyFlock/bevy_new_2d (triple licensed - used here under the MIT LICENSE), and
+
+  * the documentation/examples of crates that have been used - especially the excellent [Flair](https://github.com/eckz/bevy_flair/blob/main/examples/game_menu.rs) for the main menu. (MIT LICENSED)
+
+All other crates/code are licensed under their respective licenses and used here with permission.
