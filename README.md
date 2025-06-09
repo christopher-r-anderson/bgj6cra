@@ -2,6 +2,8 @@
 
 Destroy enemy bases, but be careful - destroying enemies causes a chain reaction of explosions that can lead to your destruction!
 
+Download or play at [Maxx Obliterate on itch.io](https://christopher-anderson.itch.io/maxx-obliterate)
+
 ## Developed for the Bevy Jam 6 Game Jam
 
 Theme: Chain Reaction
