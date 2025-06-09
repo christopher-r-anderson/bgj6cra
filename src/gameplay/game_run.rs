@@ -7,7 +7,7 @@ use crate::{
             choose_01, choose_02, corridor_01, corridor_02, game_01, game_02, in_yer_face_1,
             in_yer_face_2, in_yer_face_3, path,
         },
-        training::{secondary, shadow, training_01, training_02, training_03, wall},
+        training::{base, defenders, land, secondary, shadow, wall},
     },
 };
 
@@ -63,12 +63,12 @@ impl GameRun {
     }
     pub fn training_levels() -> Vec<fn(&AssetServer) -> LevelConfig> {
         vec![
-            shadow::get_config,
+            base::get_config,
+            defenders::get_config,
             secondary::get_config,
+            shadow::get_config,
+            land::get_config,
             wall::get_config,
-            training_01::get_config,
-            training_02::get_config,
-            training_03::get_config,
         ]
     }
     pub fn new_game() -> Self {
