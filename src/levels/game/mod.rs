@@ -1,3 +1,4 @@
+pub mod corridor_01;
 pub mod game_01;
 pub mod game_02;
 pub mod in_yer_face_1;

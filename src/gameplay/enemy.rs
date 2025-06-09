@@ -145,7 +145,7 @@ pub enum EnemyDestruction {
     Impossible,
 }
 
-enum DefenderClass {
+pub enum DefenderClass {
     One,
     Two,
     Three,
@@ -197,10 +197,10 @@ impl EnemyBundle {
             state_scoped: StateScoped(AppState::Gameplay),
         }
     }
-    fn new_defender(
+    pub fn new_defender(
         asset_server: &AssetServer,
         position: Vec2,
-        defender_class: DefenderClass,
+        defender_class: &DefenderClass,
     ) -> Self {
         let (class, scene) = match defender_class {
             DefenderClass::One => (EnemyClass::DefenderOne, "enemies/enemy-defender-one.glb"),
@@ -231,13 +231,13 @@ impl EnemyBundle {
         }
     }
     pub fn new_primary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, DefenderClass::One)
+        Self::new_defender(asset_server, position, &DefenderClass::One)
     }
     pub fn new_secondary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, DefenderClass::Two)
+        Self::new_defender(asset_server, position, &DefenderClass::Two)
     }
     pub fn new_tertiary_defender(asset_server: &AssetServer, position: Vec2) -> Self {
-        Self::new_defender(asset_server, position, DefenderClass::Three)
+        Self::new_defender(asset_server, position, &DefenderClass::Three)
     }
     pub fn new_land(asset_server: &AssetServer, position: Vec2, scale: Vec2) -> Self {
         Self {
