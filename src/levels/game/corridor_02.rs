@@ -42,7 +42,7 @@ pub fn get_config(asset_server: &AssetServer) -> LevelConfig {
     }
 
     LevelConfig {
-        name: "Corridor 2",
+        name: "Corridor Shooter 2",
         notes: "",
         start_position: vec2(0., -hh + 20.),
         enemies,
