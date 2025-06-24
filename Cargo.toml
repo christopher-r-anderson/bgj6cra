@@ -14,6 +14,8 @@ log = { version = "0.4", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
+# temp until dependency chain updates (bevy_flair -> bevy_flair_style -> selectors -> servo_arc
+servo_arc = "0.4.1"
 # Compile low-severity logs out of web builds for performance.
 tracing = { version = "0.1", features = [
     "max_level_debug",
